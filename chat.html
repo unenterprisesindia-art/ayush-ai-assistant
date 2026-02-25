@@ -1,19 +1,93 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chat - AYUSH AI</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>AYUSH AI Chat</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    .chat-container {
+      max-width: 700px;
+      margin: 100px auto;
+      background: var(--card-bg);
+      backdrop-filter: blur(15px);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .messages {
+      height: 400px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+    }
+
+    .message {
+      padding: 10px 15px;
+      margin: 10px 0;
+      border-radius: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .user {
+      background: var(--accent);
+      color: black;
+      text-align: right;
+    }
+
+    .bot {
+      background: rgba(255,255,255,0.1);
+    }
+
+    input {
+      width: 75%;
+      padding: 12px;
+      border-radius: 30px;
+      border: none;
+      outline: none;
+    }
+
+    button {
+      padding: 12px 20px;
+      border-radius: 30px;
+      border: none;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    @keyframes fadeIn {
+      from {opacity:0; transform:translateY(10px);}
+      to {opacity:1; transform:translateY(0);}
+    }
+  </style>
 </head>
 <body>
 
-<h2>AYUSH AI Chat</h2>
+<button id="themeToggle">🌙</button>
 
-<div id="chatBox"></div>
+<div class="chat-container">
+  <div class="messages" id="messages"></div>
+  <input type="text" id="input" placeholder="Describe symptoms...">
+  <button onclick="sendMessage()">Send</button>
+</div>
 
-<input type="text" id="userInput" placeholder="Describe your symptoms...">
-<button onclick="sendMessage()">Send</button>
+<script src="js/theme.js"></script>
+<script>
+async function sendMessage(){
+  const input = document.getElementById("input");
+  const messages = document.getElementById("messages");
 
-<script src="js/chat.js"></script>
+  messages.innerHTML += `<div class="message user">${input.value}</div>`;
+
+  messages.innerHTML += `<div class="message bot">Typing...</div>`;
+
+  setTimeout(()=>{
+    document.querySelector(".bot:last-child").innerText =
+      "Suggested Ayurvedic remedy based on symptoms.";
+  },1000);
+
+  input.value="";
+}
+</script>
 
 </body>
 </html>
