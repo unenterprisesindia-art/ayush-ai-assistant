@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AYUSH AI Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      overflow-x: hidden;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 8%;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.05);
+      position: fixed;
+      width: 100%;
+      top: 0;
+    }
+
+    nav h2 {
+      font-weight: 600;
+      color: #00ffae;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+    }
+
+    nav ul li {
+      margin-left: 25px;
+    }
+
+    nav ul li a {
+      text-decoration: none;
+      color: white;
+      font-weight: 400;
+      transition: 0.3s;
+    }
+
+    nav ul li a:hover {
+      color: #00ffae;
+    }
+
+    .hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 10%;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .hero span {
+      color: #00ffae;
+    }
+
+    .hero p {
+      max-width: 600px;
+      opacity: 0.8;
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border-radius: 30px;
+      background: #00ffae;
+      color: #000;
+      font-weight: 600;
+      text-decoration: none;
+      transition: 0.3s ease;
+    }
+
+    .btn:hover {
+      background: white;
+      transform: scale(1.05);
+    }
+
+    .features {
+      padding: 80px 8%;
+      background: #111;
+      text-align: center;
+    }
+
+    .features h2 {
+      margin-bottom: 40px;
+      font-size: 2rem;
+      color: #00ffae;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+
+    .feature-card {
+      background: #1a1a1a;
+      padding: 30px;
+      border-radius: 15px;
+      transition: 0.3s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-10px);
+      background: #222;
+    }
+
+    .feature-card h3 {
+      margin-bottom: 15px;
+      color: #00ffae;
+    }
+
+    footer {
+      padding: 20px;
+      text-align: center;
+      background: #000;
+      opacity: 0.8;
+    }
+
+    @media(max-width:768px){
+      .hero h1{
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <h2>🌿 AYUSH AI</h2>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="chat.html">Consult</a></li>
+      <li><a href="herbs.html">Herbs</a></li>
+      <li><a href="login.html">Login</a></li>
+    </ul>
+  </nav>
+
+  <section class="hero">
+    <h1>Your Personal <span>Ayurvedic</span> Digital Assistant</h1>
+    <p>
+      Get AI-powered guidance on traditional AYUSH medicine, herbal remedies, 
+      and holistic wellness solutions.
+    </p>
+    <a href="chat.html" class="btn">Start Consultation</a>
+  </section>
+
+  <section class="features">
+    <h2>Core Features</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>🤖 AI Consultation</h3>
+        <p>Get instant Ayurvedic suggestions powered by IBM watsonx AI.</p>
+      </div>
+
+      <div class="feature-card">
+        <h3>🌿 Herbal Encyclopedia</h3>
+        <p>Explore detailed benefits and usage of Ayurvedic herbs.</p>
+      </div>
+
+      <div class="feature-card">
+        <h3>📊 Dosha Analysis</h3>
+        <p>Understand your body type and personalized wellness plan.</p>
+      </div>
+
+      <div class="feature-card">
+        <h3>🔐 Secure Login</h3>
+        <p>Save consultation history securely with Firebase Authentication.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 AYUSH Digital Assistant | Built by UNNAT
+  </footer>
+
+</body>
+</html>
