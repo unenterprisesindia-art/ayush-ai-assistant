@@ -1,0 +1,23 @@
+:root {
+  --bg-primary: #0f2027;
+  --bg-secondary: #203a43;
+  --card-bg: rgba(255,255,255,0.08);
+  --text-color: #ffffff;
+  --accent: #00ffae;
+}
+
+body.light {
+  --bg-primary: #f4f7fa;
+  --bg-secondary: #e2ecf5;
+  --card-bg: rgba(0,0,0,0.05);
+  --text-color: #111;
+  --accent: #007bff;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg,var(--bg-primary),var(--bg-secondary));
+  color: var(--text-color);
+  transition: 0.3s ease;
+}
