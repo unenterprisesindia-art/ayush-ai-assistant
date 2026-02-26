@@ -1,4 +1,9 @@
-import { db } from "./firebase-init.js";
+import { auth, db } from "./firebase-init.js";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import {
   addDoc,
   collection,
@@ -12,6 +17,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const statusLine = document.getElementById("status");
+const authMessage = document.getElementById("authMessage");
+const authForm = document.getElementById("authForm");
+const emailInput = document.getElementById("emailInput");
+const passwordInput = document.getElementById("passwordInput");
+const signOutBtn = document.getElementById("signOutBtn");
+const adminContent = document.getElementById("adminContent");
+
 const herbForm = document.getElementById("herbForm");
 const entryList = document.getElementById("entryList");
 
@@ -30,6 +42,20 @@ const downloadTemplateBtn = document.getElementById("downloadTemplateBtn");
 const herbsCollection = collection(db, "herbs");
 const CSV_HEADERS = ["name", "category", "benefits", "used_for", "forms", "dosage", "precautions"];
 const BATCH_LIMIT = 450;
+const ADMIN_EMAILS = ["unenterprisesindia@gmail.com"];
+
+let unsubscribeHerbs = null;
+let adminAuthorized = false;
+
+function isAuthorizedAdmin(user) {
+  const email = user?.email?.toLowerCase();
+  return Boolean(email && ADMIN_EMAILS.includes(email));
+}
+
+function setAdminVisibility(isVisible) {
+  adminContent.hidden = !isVisible;
+  signOutBtn.hidden = !isVisible;
+}
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -37,34 +63,27 @@ function escapeHtml(value) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+    .replaceAll("'", "&#039;");
 }
 
-function toArray(value) {
-  return String(value)
-    .split(",")
+function splitList(value = "") {
+  return value
+    .split("|")
     .map((item) => item.trim())
     .filter(Boolean);
 }
 
-function splitList(value) {
-  const source = String(value || "").trim();
-  if (!source) return [];
-  const separator = source.includes("|") ? "|" : ",";
-  return source.split(separator).map((item) => item.trim()).filter(Boolean);
-}
-
-function parseCsvLine(line) {
-  const values = [];
+function parseCsvLine(line = "") {
+  const cells = [];
   let current = "";
   let inQuotes = false;
 
   for (let index = 0; index < line.length; index += 1) {
-    const char = line[index];
-    const nextChar = line[index + 1];
+    const character = line[index];
 
-    if (char === '"') {
-      if (inQuotes && nextChar === '"') {
+    if (character === '"') {
+      const next = line[index + 1];
+      if (inQuotes && next === '"') {
         current += '"';
         index += 1;
       } else {
@@ -73,17 +92,24 @@ function parseCsvLine(line) {
       continue;
     }
 
-    if (char === "," && !inQuotes) {
-      values.push(current.trim());
+    if (character === "," && !inQuotes) {
+      cells.push(current.trim());
       current = "";
       continue;
     }
 
-    current += char;
+    current += character;
   }
 
-  values.push(current.trim());
-  return values;
+  cells.push(current.trim());
+  return cells;
+}
+
+function toArray(text) {
+  return text
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
 }
 
 function renderEntries(items) {
@@ -116,7 +142,32 @@ function chunk(array, size) {
   return result;
 }
 
+function stopHerbListener() {
+  if (unsubscribeHerbs) {
+    unsubscribeHerbs();
+    unsubscribeHerbs = null;
+  }
+}
+
+function startHerbListener() {
+  stopHerbListener();
+  const herbsQuery = query(herbsCollection, orderBy("createdAt", "desc"));
+  unsubscribeHerbs = onSnapshot(herbsQuery, (snapshot) => {
+    const entries = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+    renderEntries(entries);
+    statusLine.textContent = "Connected to Firestore.";
+  }, (error) => {
+    console.error(error);
+    statusLine.textContent = "Firestore connection failed. Check rules/config.";
+  });
+}
+
 async function uploadCsv() {
+  if (!adminAuthorized) {
+    statusLine.textContent = "Admin authorization required.";
+    return;
+  }
+
   const file = csvInput?.files?.[0];
   if (!file) {
     statusLine.textContent = "Please choose a CSV file first.";
@@ -199,8 +250,65 @@ function downloadTemplate() {
   URL.revokeObjectURL(url);
 }
 
+authForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  try {
+    authMessage.textContent = "Signing in...";
+    await signInWithEmailAndPassword(auth, email, password);
+    passwordInput.value = "";
+  } catch (error) {
+    console.error(error);
+    authMessage.textContent = "Sign in failed. Check Firebase email/password.";
+  }
+});
+
+signOutBtn.addEventListener("click", async () => {
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error(error);
+    authMessage.textContent = "Failed to sign out.";
+  }
+});
+
+onAuthStateChanged(auth, async (user) => {
+  adminAuthorized = isAuthorizedAdmin(user);
+
+  if (!user) {
+    setAdminVisibility(false);
+    stopHerbListener();
+    entryList.innerHTML = "";
+    statusLine.textContent = "Sign in to connect to Firestore.";
+    authMessage.textContent = "Sign in with Firebase email/password (admin account only).";
+    return;
+  }
+
+  if (!adminAuthorized) {
+    setAdminVisibility(false);
+    stopHerbListener();
+    entryList.innerHTML = "";
+    statusLine.textContent = "Access denied: this account is not an admin.";
+    authMessage.textContent = "Only admin users can access this panel.";
+    await signOut(auth);
+    return;
+  }
+
+  setAdminVisibility(true);
+  authMessage.textContent = `Signed in as ${user.email}`;
+  statusLine.textContent = "Connecting to Firestore...";
+  startHerbListener();
+});
+
 herbForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+
+  if (!adminAuthorized) {
+    statusLine.textContent = "Admin authorization required.";
+    return;
+  }
 
   const payload = {
     name: nameInput.value.trim(),
@@ -229,6 +337,11 @@ herbForm.addEventListener("submit", async (event) => {
 });
 
 entryList.addEventListener("click", async (event) => {
+  if (!adminAuthorized) {
+    statusLine.textContent = "Admin authorization required.";
+    return;
+  }
+
   const target = event.target;
   if (!(target instanceof HTMLElement) || !target.matches(".danger-btn")) return;
 
@@ -242,16 +355,6 @@ entryList.addEventListener("click", async (event) => {
     console.error(error);
     statusLine.textContent = "Failed to delete herb.";
   }
-});
-
-const herbsQuery = query(herbsCollection, orderBy("createdAt", "desc"));
-onSnapshot(herbsQuery, (snapshot) => {
-  const entries = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
-  renderEntries(entries);
-  statusLine.textContent = "Connected to Firestore.";
-}, (error) => {
-  console.error(error);
-  statusLine.textContent = "Firestore connection failed. Check rules/config.";
 });
 
 if (uploadCsvBtn) uploadCsvBtn.addEventListener("click", uploadCsv);
