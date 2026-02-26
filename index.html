@@ -103,6 +103,16 @@
       color: var(--accent);
     }
 
+    .hero-image {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--soft-shadow);
+      margin: 8px 0 14px;
+      object-fit: cover;
+      aspect-ratio: 4 / 3;
+    }
+
     .hero-side ul {
       margin: 0;
       padding-left: 18px;
@@ -273,6 +283,12 @@
 
       <aside class="hero-side">
         <h3>What you can do</h3>
+        <img
+          class="hero-image"
+          src="https://github.com/unenterprisesindia-art/ayush-ai-assistant/blob/main/ChatGPT%20Image%20Feb%2026,%202026,%2007_00_47%20PM.png?raw=true"
+          alt="AYUSH wellness themed illustration"
+          loading="lazy"
+        >
         <ul>
           <li>Search herbs by name and wellness category.</li>
           <li>Understand benefits, common forms, and practical precautions.</li>
