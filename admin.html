@@ -127,13 +127,14 @@
         <textarea id="benefitsInput" placeholder="Benefits (comma separated)" class="full-width" required></textarea>
         <textarea id="usedForInput" placeholder="Used for (comma separated)" required></textarea>
         <textarea id="formsInput" placeholder="Forms (comma separated)" required></textarea>
+        <input id="imageUrlInput" type="url" placeholder="Image address (optional)"
         <input id="dosageInput" type="text" placeholder="Dosage guidance" class="full-width" required>
         <textarea id="precautionsInput" placeholder="Precautions (comma separated)" class="full-width" required></textarea>
         <button type="submit" class="full-width">Add Herb Details</button>
       </form>
 
       <section class="bulk-upload">
-        <p><strong>Bulk CSV upload</strong> (exact headers): <code>name,category,benefits,used_for,forms,dosage,precautions</code></p>
+        <p><strong>Bulk CSV upload</strong> (exact headers): <code>name,category,benefits,used_for,forms,image_url,dosage,precautions</code></p>
         <p>For list columns (<code>benefits</code>, <code>used_for</code>, <code>forms</code>, <code>precautions</code>) use <code>|</code> between values.</p>
         <div class="bulk-actions">
           <input id="csvInput" type="file" accept=".csv,text/csv">
