@@ -32,6 +32,7 @@ const categoryInput = document.getElementById("categoryInput");
 const benefitsInput = document.getElementById("benefitsInput");
 const usedForInput = document.getElementById("usedForInput");
 const formsInput = document.getElementById("formsInput");
+const imageUrlInput = document.getElementById("imageUrlInput");
 const dosageInput = document.getElementById("dosageInput");
 const precautionsInput = document.getElementById("precautionsInput");
 
@@ -40,7 +41,7 @@ const uploadCsvBtn = document.getElementById("uploadCsvBtn");
 const downloadTemplateBtn = document.getElementById("downloadTemplateBtn");
 
 const herbsCollection = collection(db, "herbs");
-const CSV_HEADERS = ["name", "category", "benefits", "used_for", "forms", "dosage", "precautions"];
+const CSV_HEADERS = ["name", "category", "benefits", "used_for", "forms", "image_url", "dosage", "precautions"];
 const BATCH_LIMIT = 450;
 const ADMIN_EMAILS = ["unenterprisesindia@gmail.com"];
 
@@ -126,6 +127,7 @@ function renderEntries(items) {
         <p><strong>Benefits:</strong> ${escapeHtml((item.benefits || []).join(", "))}</p>
         <p><strong>Used for:</strong> ${escapeHtml((item.used_for || []).join(", "))}</p>
         <p><strong>Forms:</strong> ${escapeHtml((item.forms || []).join(", "))}</p>
+        <p><strong>Image:</strong> ${item.image_url ? `<a href="${escapeHtml(item.image_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.image_url)}</a>` : "-"}</p>
         <p><strong>Dosage:</strong> ${escapeHtml(item.dosage || "-")}</p>
         <p><strong>Precautions:</strong> ${escapeHtml((item.precautions || []).join(", "))}</p>
       </div>
@@ -189,7 +191,7 @@ async function uploadCsv() {
     const headers = parseCsvLine(lines[0]).map((header) => header.toLowerCase());
     const headersValid = CSV_HEADERS.every((header, index) => headers[index] === header);
     if (!headersValid) {
-      statusLine.textContent = "Invalid CSV headers. Use: name,category,benefits,used_for,forms,dosage,precautions";
+      statusLine.textContent = "Invalid CSV headers. Use: name,category,benefits,used_for,forms,image_url,dosage,precautions";
       return;
     }
 
@@ -204,8 +206,9 @@ async function uploadCsv() {
         benefits: splitList(row[2]),
         used_for: splitList(row[3]),
         forms: splitList(row[4]),
-        dosage: row[5]?.trim(),
-        precautions: splitList(row[6]),
+        image_url: row[5]?.trim(),
+        dosage: row[6]?.trim(),
+        precautions: splitList(row[7])
         createdAt: serverTimestamp()
       };
 
@@ -238,7 +241,7 @@ async function uploadCsv() {
 function downloadTemplate() {
   const sample = [
     CSV_HEADERS.join(","),
-    'Ashwagandha,Adaptogen,"Stress relief|Sleep support","Stress|Fatigue","Powder|Capsule",1 capsule daily,"Consult doctor if pregnant"'
+        'Ashwagandha,Adaptogen,"Stress relief|Sleep support","Stress|Fatigue","Powder|Capsule",https://example.com/ashwagandha.jpg,1 capsule daily,"Consult doctor if pregnant"
   ].join("\n");
 
   const blob = new Blob([sample], { type: "text/csv;charset=utf-8" });
@@ -316,6 +319,7 @@ herbForm.addEventListener("submit", async (event) => {
     benefits: toArray(benefitsInput.value),
     used_for: toArray(usedForInput.value),
     forms: toArray(formsInput.value),
+    image_url: imageUrlInput.value.trim(),
     dosage: dosageInput.value.trim(),
     precautions: toArray(precautionsInput.value),
     createdAt: serverTimestamp()
