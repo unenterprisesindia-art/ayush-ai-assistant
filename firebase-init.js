@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
+import { getAnalytics, isSupported as analyticsSupported } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
@@ -14,13 +14,16 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
-// 🔥 Initialize Services
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Make globally accessible
+let analytics = null;
+if (await analyticsSupported()) {
+  analytics = getAnalytics(app);
+}
+
 window.auth = auth;
 window.db = db;
 window.analytics = analytics;
+
+export { app, auth, db, analytics }
