@@ -24,6 +24,35 @@
       flex-wrap: wrap;
     }
     .admin-title { color: var(--accent); }
+    .auth-card {
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.08);
+      margin-bottom: 16px;
+      display: grid;
+      gap: 10px;
+    }
+    .auth-card h2 { margin: 0; font-size: 1.1rem; }
+    .auth-form {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .auth-form input,
+    .auth-form button,
+    .signout-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: inherit;
+    }
+    .auth-form button,
+    .signout-btn {
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+      cursor: pointer;
+    }
     .entry-form {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -95,8 +124,10 @@
       color: #fff;
       cursor: pointer;
     }
+    #adminContent[hidden] { display: none; }
     @media (max-width: 700px) {
-      .entry-form { grid-template-columns: 1fr; }
+      .entry-form,
+      .auth-form { grid-template-columns: 1fr; }
       .entry-form .full-width { grid-column: auto; }
     }
   </style>
@@ -110,30 +141,43 @@
       <a href="herbs.html" class="btn">View Herbs Page</a>
     </div>
 
-    <p class="status-line" id="status">Connecting to Firestore...</p>
-
-    <form class="entry-form" id="herbForm">
-      <input id="nameInput" type="text" placeholder="Herb name" required>
-      <input id="categoryInput" type="text" placeholder="Category" required>
-      <textarea id="benefitsInput" placeholder="Benefits (comma separated)" class="full-width" required></textarea>
-      <textarea id="usedForInput" placeholder="Used for (comma separated)" required></textarea>
-      <textarea id="formsInput" placeholder="Forms (comma separated)" required></textarea>
-      <input id="dosageInput" type="text" placeholder="Dosage guidance" class="full-width" required>
-      <textarea id="precautionsInput" placeholder="Precautions (comma separated)" class="full-width" required></textarea>
-      <button type="submit" class="full-width">Add Herb Details</button>
-    </form>
-
-    <section class="bulk-upload">
-      <p><strong>Bulk CSV upload</strong> (exact headers): <code>name,category,benefits,used_for,forms,dosage,precautions</code></p>
-      <p>For list columns (<code>benefits</code>, <code>used_for</code>, <code>forms</code>, <code>precautions</code>) use <code>|</code> between values.</p>
-      <div class="bulk-actions">
-        <input id="csvInput" type="file" accept=".csv,text/csv">
-        <button id="uploadCsvBtn" type="button">Upload CSV</button>
-        <button id="downloadTemplateBtn" type="button">Download Template</button>
-      </div>
+    <section class="auth-card">
+      <h2>Admin sign in</h2>
+      <form class="auth-form" id="authForm">
+        <input id="emailInput" type="email" placeholder="Admin email" value="unenterprisesindia@gmail.com" required>
+        <input id="passwordInput" type="password" placeholder="Password" required>
+        <button type="submit">Sign In</button>
+      </form>
+      <button id="signOutBtn" class="signout-btn" type="button" hidden>Sign Out</button>
+      <p id="authMessage" class="status-line">Sign in with Firebase email/password.</p>
     </section>
 
-    <div id="entryList" class="entry-list"></div>
+    <p class="status-line" id="status">Sign in to connect to Firestore.</p>
+
+    <section id="adminContent" hidden>
+      <form class="entry-form" id="herbForm">
+        <input id="nameInput" type="text" placeholder="Herb name" required>
+        <input id="categoryInput" type="text" placeholder="Category" required>
+        <textarea id="benefitsInput" placeholder="Benefits (comma separated)" class="full-width" required></textarea>
+        <textarea id="usedForInput" placeholder="Used for (comma separated)" required></textarea>
+        <textarea id="formsInput" placeholder="Forms (comma separated)" required></textarea>
+        <input id="dosageInput" type="text" placeholder="Dosage guidance" class="full-width" required>
+        <textarea id="precautionsInput" placeholder="Precautions (comma separated)" class="full-width" required></textarea>
+        <button type="submit" class="full-width">Add Herb Details</button>
+      </form>
+
+      <section class="bulk-upload">
+        <p><strong>Bulk CSV upload</strong> (exact headers): <code>name,category,benefits,used_for,forms,dosage,precautions</code></p>
+        <p>For list columns (<code>benefits</code>, <code>used_for</code>, <code>forms</code>, <code>precautions</code>) use <code>|</code> between values.</p>
+        <div class="bulk-actions">
+          <input id="csvInput" type="file" accept=".csv,text/csv">
+          <button id="uploadCsvBtn" type="button">Upload CSV</button>
+          <button id="downloadTemplateBtn" type="button">Download Template</button>
+        </div>
+      </section>
+
+      <div id="entryList" class="entry-list"></div>
+    </section>
   </div>
 
   <script src="theme.js"></script>
