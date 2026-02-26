@@ -143,7 +143,7 @@
   <main class="page">
     <div class="header-row">
       <h1>Herbal Encyclopedia</h1>
-      <span>12 AYUSH herbs</span>
+      <span id="totalCount">Loading herbs...</span>
     </div>
 
     <div class="filters">
@@ -330,5 +330,6 @@
     categoryFilter.addEventListener("change", filterHerbs);
     render(herbalEncyclopedia);
   </script>
+  <script type="module" src="herbs.js"></script>
 </body>
 </html>
