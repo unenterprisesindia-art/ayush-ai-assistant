@@ -208,7 +208,7 @@ async function uploadCsv() {
         forms: splitList(row[4]),
         image_url: row[5]?.trim(),
         dosage: row[6]?.trim(),
-        precautions: splitList(row[7])
+        precautions: splitList(row[7]),
         createdAt: serverTimestamp()
       };
 
@@ -241,7 +241,7 @@ async function uploadCsv() {
 function downloadTemplate() {
   const sample = [
     CSV_HEADERS.join(","),
-        'Ashwagandha,Adaptogen,"Stress relief|Sleep support","Stress|Fatigue","Powder|Capsule",https://example.com/ashwagandha.jpg,1 capsule daily,"Consult doctor if pregnant"
+        'Ashwagandha,Adaptogen,"Stress relief|Sleep support","Stress|Fatigue","Powder|Capsule",https://example.com/ashwagandha.jpg,1 capsule daily,"Consult doctor if pregnant"'
   ].join("\n");
 
   const blob = new Blob([sample], { type: "text/csv;charset=utf-8" });
