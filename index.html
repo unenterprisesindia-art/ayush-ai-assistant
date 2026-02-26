@@ -6,31 +6,235 @@
   <title>AYUSH AI Assistant</title>
   <link rel="stylesheet" href="theme.css">
   <style>
+    :root {
+      --hero-gradient: linear-gradient(135deg, rgba(103, 242, 196, 0.22), rgba(92, 131, 255, 0.14));
+      --glass-bg: rgba(255, 255, 255, 0.06);
+      --soft-shadow: 0 10px 30px rgba(10, 16, 30, 0.14);
+      --strong-shadow: 0 18px 45px rgba(10, 16, 30, 0.2);
+    }
+
+    .landing {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .blob {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(20px);
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .blob.one {
+      width: 260px;
+      height: 260px;
+      top: 20px;
+      right: -80px;
+      background: rgba(103, 242, 196, 0.35);
+    }
+
+    .blob.two {
+      width: 220px;
+      height: 220px;
+      bottom: 80px;
+      left: -90px;
+      background: rgba(109, 137, 255, 0.28);
+    }
+
     .hero {
+      position: relative;
+      z-index: 1;
       margin-top: 18px;
-      padding: 54px min(6vw, 60px);
+      padding: 56px min(6vw, 62px);
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
-      gap: 26px;
+      gap: 24px;
       align-items: center;
+      border-radius: 24px;
+      background: var(--hero-gradient);
+      border: 1px solid var(--border);
+      box-shadow: var(--soft-shadow);
     }
-    .hero h1 { font-size: clamp(2rem, 4vw, 3.5rem); margin: 0 0 14px; line-height: 1.1; }
-    .hero p { margin: 0 0 26px; color: var(--text-muted); }
-    .hero-badge { display: inline-block; padding: 6px 12px; border-radius: 999px; margin-bottom: 16px; background: rgba(103, 242, 196, 0.2); }
-    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-    .hero-side { padding: 20px; border-radius: 16px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); }
-    .hero-side h3 { margin-top: 0; color: var(--accent); }
 
-    .section-title { margin: 36px 0 16px; font-size: 1.55rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
-    .card { padding: 18px; border-radius: 16px; background: var(--surface-strong); border: 1px solid var(--border); }
-    .card h3 { margin: 0 0 8px; color: var(--accent); }
-    .card p { margin: 0; color: var(--text-muted); }
+    .hero h1 {
+      margin: 0 0 12px;
+      line-height: 1.08;
+      font-size: clamp(2rem, 4.5vw, 3.4rem);
+    }
 
-    footer { text-align: center; padding: 28px 12px 44px; color: var(--text-muted); }
+    .hero p {
+      color: var(--text-muted);
+      margin: 0 0 24px;
+      max-width: 62ch;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(103, 242, 196, 0.45);
+      background: rgba(103, 242, 196, 0.18);
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .hero-side {
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--glass-bg);
+      padding: 22px;
+      box-shadow: var(--soft-shadow);
+      backdrop-filter: blur(6px);
+    }
+
+    .hero-side h3 {
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .hero-side ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--text-muted);
+      display: grid;
+      gap: 10px;
+    }
+
+    .section-title {
+      margin: 34px 0 14px;
+      font-size: 1.5rem;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0 10px;
+    }
+
+    .pill {
+      border: 1px solid var(--border);
+      background: var(--surface-strong);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      padding: 18px;
+      border-radius: 16px;
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      box-shadow: var(--soft-shadow);
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--strong-shadow);
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      color: var(--accent);
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--text-muted);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      counter-reset: flow;
+    }
+
+    .step {
+      counter-increment: flow;
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px dashed var(--border);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .step::before {
+      content: "0" counter(flow);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      color: #04261f;
+      background: var(--accent);
+    }
+
+    .step h4 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .cta {
+      margin-top: 36px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      background: linear-gradient(130deg, rgba(103, 242, 196, 0.14), rgba(109, 137, 255, 0.14));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .cta h3 {
+      margin: 0 0 4px;
+    }
+
+    .cta p {
+      margin: 0;
+      color: var(--text-muted);
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px 12px 44px;
+      color: var(--text-muted);
+    }
 
     @media (max-width: 900px) {
-      .hero { grid-template-columns: 1fr; }
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 36px 20px;
+      }
     }
   </style>
 </head>
@@ -46,45 +250,76 @@
     </ul>
   </nav>
 
-  <main class="page-shell">
-    <section class="hero glass">
+  <main class="page-shell landing">
+    <span class="blob one"></span>
+    <span class="blob two"></span>
+
+    <section class="hero">
       <div>
-        <span class="hero-badge">Trusted traditional wellness, guided by AI</span>
-        <h1>Beautiful, simple <span style="color:var(--accent)">AYUSH Assistant</span> for daily care</h1>
-        <p>Get herbal suggestions, wellness education, and natural care support through an elegant experience designed for everyone.</p>
+        <span class="hero-badge">✨ Personalized wellness guidance powered by AI</span>
+        <h1>Your modern <span style="color:var(--accent)">AYUSH companion</span> for daily natural care</h1>
+        <p>Explore traditional herbs, learn safe usage basics, and build healthier habits with an interface that feels clear, friendly, and easy for everyone to use.</p>
         <div class="hero-actions">
           <a href="herbs.html" class="btn">Explore Herbs</a>
-          <a href="#features" class="btn secondary">See Features</a>
+          <a href="#features" class="btn secondary">View Features</a>
+        </div>
+
+        <div class="pill-row">
+          <span class="pill">🌱 Ayurvedic Knowledge</span>
+          <span class="pill">📚 Beginner Friendly</span>
+          <span class="pill">📱 Works on Mobile</span>
         </div>
       </div>
+
       <aside class="hero-side">
-        <h3>✨ Assistant Highlights</h3>
-        <p>• Herbal encyclopedia with search + category filters</p>
-        <p>• Responsive theme with modern light/dark mode</p>
+        <h3>What you can do</h3>
+        <ul>
+          <li>Search herbs by name and wellness category.</li>
+          <li>Understand benefits, common forms, and practical precautions.</li>
+          <li>Use a clean light/dark experience for comfortable reading.</li>
+          <li>Access guided information anytime with integrated assistant chat.</li>
+        </ul>
       </aside>
     </section>
 
     <section id="features">
-      <h2 class="section-title">Popular AYUSH Herbs</h2>
+      <h2 class="section-title">Featured AYUSH Herbs</h2>
       <div class="grid">
-        <article class="card"><h3>Tulsi</h3><p>Supports immunity and everyday respiratory health.</p></article>
-        <article class="card"><h3>Ashwagandha</h3><p>Helps with stress balance and restful sleep cycles.</p></article>
-        <article class="card"><h3>Turmeric</h3><p>Known for inflammation support and joint comfort.</p></article>
+        <article class="card"><h3>Tulsi</h3><p>Traditionally used to support immunity and respiratory wellness.</p></article>
+        <article class="card"><h3>Ashwagandha</h3><p>Popular for stress support, calm energy, and better recovery.</p></article>
+        <article class="card"><h3>Turmeric</h3><p>Known for daily inflammation support and joint comfort.</p></article>
+        <article class="card"><h3>Giloy</h3><p>Valued in classical wellness routines for balance and vitality.</p></article>
       </div>
 
-      <h2 class="section-title">Core Features</h2>
-      <div class="grid">
-        <article class="card"><h3>🌿 Herbal Encyclopedia</h3><p>Find herbs, benefits, forms, and precautions in one place.</p></article>
-        <article class="card"><h3>📊 Dosha-aware Insights</h3><p>Understand how natural habits fit your wellness routine.</p></article>
-        <article class="card"><h3>🔐 Secure Access</h3><p>Firebase-backed sign in for controlled administration.</p></article>
+      <h2 class="section-title">How it works</h2>
+      <div class="steps">
+        <article class="step">
+          <h4>Discover</h4>
+          <p>Browse herbs and understand traditional uses in simple language.</p>
+        </article>
+        <article class="step">
+          <h4>Learn</h4>
+          <p>Read clear summaries, cautions, and lifestyle guidance.</p>
+        </article>
+        <article class="step">
+          <h4>Apply</h4>
+          <p>Use the insights to build a safe, practical wellness routine.</p>
+        </article>
       </div>
+
+      <section class="cta">
+        <div>
+          <h3>Ready to start your natural wellness journey?</h3>
+          <p>Open the herbal encyclopedia and begin exploring trusted AYUSH insights.</p>
+        </div>
+        <a href="herbs.html" class="btn">Open Encyclopedia</a>
+      </section>
     </section>
-
-
   </main>
 
   <footer>© 2026 AYUSH Digital Assistant | Crafted with care</footer>
-<script>
+
+  <script>
     window.watsonAssistantChatOptions = {
       integrationID: "8e32cc13-c4cb-4bdd-9363-9ba3445d6135",
       region: "au-syd",
