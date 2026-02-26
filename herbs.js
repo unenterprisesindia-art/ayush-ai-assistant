@@ -31,6 +31,7 @@ function escapeHtml(value) {
 function render(herbs) {
   herbGrid.innerHTML = herbs.map((herb) => `
     <article class="card">
+      ${herb.image_url ? `<img src="${escapeHtml(herb.image_url)}" alt="${escapeHtml(herb.name || "Herb image")}" loading="lazy" style="width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.14);">` : ""
       <h3>${escapeHtml(herb.name || "Unknown Herb")}</h3>
       <span class="category">${escapeHtml(herb.category || "Uncategorized")}</span>
       <p><span class="label">Benefits:</span> ${escapeHtml(asArray(herb.benefits).join(", ") || "Not provided")}</p>
