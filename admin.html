@@ -73,8 +73,13 @@
       gap: 16px;
       border: 1px solid var(--border);
     }
+    .entry-item > div { flex: 1; min-width: 0; }
     .entry-item h3 { margin: 0 0 6px; color: var(--accent); }
-    .entry-item p { margin: 4px 0; opacity: 0.9; }
+    .entry-item p { margin: 4px 0; opacity: 0.9; overflow-wrap: anywhere; }
+    .entry-item a {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
     .danger-btn {
       align-self: flex-start;
       border: none;
@@ -86,7 +91,7 @@
       font-weight: 700;
     }
     #adminContent[hidden] { display: none; }
-    @media (max-width: 700px) { .entry-form, .auth-form { grid-template-columns: 1fr; } .entry-form .full-width { grid-column: auto; } }
+    @media (max-width: 700px) { .entry-form, .auth-form { grid-template-columns: 1fr; } .entry-form .full-width { grid-column: auto; } .entry-item { flex-direction: column; } .danger-btn { width: 100%; } }
   </style>
 </head>
 <body>
@@ -127,7 +132,7 @@
         <textarea id="benefitsInput" placeholder="Benefits (comma separated)" class="full-width" required></textarea>
         <textarea id="usedForInput" placeholder="Used for (comma separated)" required></textarea>
         <textarea id="formsInput" placeholder="Forms (comma separated)" required></textarea>
-        <input id="imageUrlInput" type="url" placeholder="Image address (optional)"
+        <input id="imageUrlInput" type="url" placeholder="Image address (optional)">
         <input id="dosageInput" type="text" placeholder="Dosage guidance" class="full-width" required>
         <textarea id="precautionsInput" placeholder="Precautions (comma separated)" class="full-width" required></textarea>
         <button type="submit" class="full-width">Add Herb Details</button>
