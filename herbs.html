@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="theme.css" />
   <style>
     * { box-sizing: border-box; }
-
     nav {
       display: flex;
       justify-content: space-between;
@@ -19,9 +18,7 @@
       backdrop-filter: blur(10px);
       z-index: 10;
     }
-
     nav h2 { margin: 0; color: var(--accent); }
-
     nav ul {
       list-style: none;
       display: flex;
@@ -30,20 +27,9 @@
       padding: 0;
       flex-wrap: wrap;
     }
-
-    nav a {
-      color: var(--text-color);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
+    nav a { color: var(--text-color); text-decoration: none; font-weight: 500; }
     nav a.active { color: var(--accent); }
-
-    .page {
-      width: min(1100px, 92%);
-      margin: 24px auto 40px;
-    }
-
+    .page { width: min(1100px, 92%); margin: 24px auto 40px; }
     .header-row {
       display: flex;
       justify-content: space-between;
@@ -52,16 +38,13 @@
       flex-wrap: wrap;
       margin-bottom: 14px;
     }
-
     h1 { margin: 0; }
-
     .filters {
       display: grid;
       grid-template-columns: 1fr 220px;
       gap: 12px;
       margin-bottom: 18px;
     }
-
     .filters input,
     .filters select {
       border: none;
@@ -71,18 +54,12 @@
       background: rgba(255,255,255,0.85);
       color: #111;
     }
-
-    .results-count {
-      opacity: 0.85;
-      margin-bottom: 14px;
-    }
-
+    .results-count { opacity: 0.85; margin-bottom: 14px; }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 14px;
     }
-
     .card {
       background: var(--card-bg);
       border-radius: 16px;
@@ -90,7 +67,6 @@
       border: 1px solid rgba(255,255,255,0.15);
       backdrop-filter: blur(12px);
     }
-
     .card h3 { margin: 0; color: var(--accent); }
     .card .category {
       display: inline-block;
@@ -98,30 +74,21 @@
       font-size: 0.9rem;
       opacity: 0.9;
     }
-
     .card p { margin: 10px 0; line-height: 1.45; }
     .label { font-weight: 600; }
-
     .chips {
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
       margin-top: 8px;
     }
-
     .chip {
       font-size: 0.82rem;
       background: rgba(255,255,255,0.15);
       border-radius: 999px;
       padding: 4px 10px;
     }
-
-    .empty {
-      text-align: center;
-      opacity: 0.9;
-      margin-top: 30px;
-    }
-
+    .empty { text-align: center; opacity: 0.9; margin-top: 30px; }
     @media (max-width: 700px) {
       nav { padding: 14px 4%; }
       .filters { grid-template-columns: 1fr; }
@@ -143,7 +110,7 @@
   <main class="page">
     <div class="header-row">
       <h1>Herbal Encyclopedia</h1>
-      <span id="totalCount">Loading herbs...</span>
+      <span id="totalCount">Loading herbs from Firestore...</span>
     </div>
 
     <div class="filters">
@@ -159,7 +126,6 @@
   </main>
 
   <script src="theme.js"></script>
-
   <script type="module" src="herbs.js"></script>
 </body>
 </html>
