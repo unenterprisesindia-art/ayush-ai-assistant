@@ -1,3 +1,4 @@
+import { db } from "./firebase-init.js";
 import {
   addDoc,
   collection,
@@ -10,53 +11,74 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const statusLine = document.getElementById("status");
-const remedyForm = document.getElementById("remedyForm");
-const titleInput = document.getElementById("titleInput");
-const descriptionInput = document.getElementById("descriptionInput");
+const herbForm = document.getElementById("herbForm");
 const entryList = document.getElementById("entryList");
 
-const remediesCollection = collection(db, "remedies");
+const nameInput = document.getElementById("nameInput");
+const categoryInput = document.getElementById("categoryInput");
+const benefitsInput = document.getElementById("benefitsInput");
+const usedForInput = document.getElementById("usedForInput");
+const formsInput = document.getElementById("formsInput");
+const dosageInput = document.getElementById("dosageInput");
+const precautionsInput = document.getElementById("precautionsInput");
+
+const herbsCollection = collection(db, "herbs");
+
+function toArray(value) {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
 
 function renderEntries(items) {
   if (!items.length) {
-    entryList.innerHTML = "<p>No remedies added yet.</p>";
+    entryList.innerHTML = "<p>No herbs added yet.</p>";
     return;
   }
 
   entryList.innerHTML = items.map((item) => `
     <article class="entry-item">
       <div>
-        <h3>${item.title}</h3>
-        <p>${item.description}</p>
+        <h3>${item.name}</h3>
+        <p><strong>Category:</strong> ${item.category}</p>
+        <p><strong>Benefits:</strong> ${(item.benefits || []).join(", ")}</p>
+        <p><strong>Used for:</strong> ${(item.used_for || []).join(", ")}</p>
+        <p><strong>Forms:</strong> ${(item.forms || []).join(", ")}</p>
+        <p><strong>Dosage:</strong> ${item.dosage || "-"}</p>
+        <p><strong>Precautions:</strong> ${(item.precautions || []).join(", ")}</p>
       </div>
       <button class="danger-btn" data-id="${item.id}">Delete</button>
     </article>
   `).join("");
 }
 
-remedyForm.addEventListener("submit", async (event) => {
+herbForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const title = titleInput.value.trim();
-  const description = descriptionInput.value.trim();
+ const payload = {
+    name: nameInput.value.trim(),
+    category: categoryInput.value.trim(),
+    benefits: toArray(benefitsInput.value),
+    used_for: toArray(usedForInput.value),
+    forms: toArray(formsInput.value),
+    dosage: dosageInput.value.trim(),
+    precautions: toArray(precautionsInput.value),
+    createdAt: serverTimestamp()
+  };
 
-  if (!title || !description) {
-    statusLine.textContent = "Please provide both title and details.";
+  if (!payload.name || !payload.category || !payload.dosage) {
+    statusLine.textContent = "Please fill in herb name, category, and dosage.";
     return;
   }
 
   try {
-    await addDoc(remediesCollection, {
-      title,
-      description,
-      createdAt: serverTimestamp()
-    });
-    titleInput.value = "";
-    descriptionInput.value = "";
-    statusLine.textContent = "Remedy added to Firestore.";
+       await addDoc(herbsCollection, payload);
+       herbForm.reset();
+       statusLine.textContent = "Herb details added to Firestore.";
   } catch (error) {
     console.error(error);
-    statusLine.textContent = "Failed to add remedy.";
+    statusLine.textContent = "Failed to add herb details."
   }
 });
 
@@ -70,20 +92,21 @@ entryList.addEventListener("click", async (event) => {
   if (!id) return;
 
   try {
-    await deleteDoc(doc(db, "remedies", id));
-    statusLine.textContent = "Remedy deleted.";
+    await deleteDoc(doc(db, "herbs", id));
+    statusLine.textContent = "Herb deleted."
   } catch (error) {
     console.error(error);
-    statusLine.textContent = "Failed to delete remedy.";
+   statusLine.textContent = "Failed to delete herb.";
   }
 });
 
-const remediesQuery = query(remediesCollection, orderBy("createdAt", "desc"));
-onSnapshot(remediesQuery, (snapshot) => {
+const herbsQuery = query(herbsCollection, orderBy("createdAt", "desc"));
+onSnapshot(herbsQuery, (snapshot) => {
   const entries = snapshot.docs.map((item) => ({
     id: item.id,
     ...item.data()
   }));
+  
   renderEntries(entries);
   statusLine.textContent = "Connected to Firestore.";
 }, (error) => {
