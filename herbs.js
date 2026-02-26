@@ -1,7 +1,7 @@
 import { db } from "./firebase-init.js";
 import {
   collection,
-  getDocs,
+  onSnapshot,
   orderBy,
   query
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
@@ -19,16 +19,25 @@ function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function render(herbs) {
   herbGrid.innerHTML = herbs.map((herb) => `
     <article class="card">
-      <h3>${herb.name || "Unknown Herb"}</h3>
-      <span class="category">${herb.category || "Uncategorized"}</span>
-      <p><span class="label">Benefits:</span> ${asArray(herb.benefits).join(", ") || "Not provided"}</p>
-      <p><span class="label">Used for:</span> ${asArray(herb.used_for).join(", ") || "Not provided"}</p>
-      <p><span class="label">Dosage:</span> ${herb.dosage || "Not provided"}</p>
-      <p><span class="label">Precautions:</span> ${asArray(herb.precautions).join("; ") || "Not provided"}</p>
-      <div class="chips">${asArray(herb.forms).map((form) => `<span class="chip">${form}</span>`).join("")}</div>
+      <h3>${escapeHtml(herb.name || "Unknown Herb")}</h3>
+      <span class="category">${escapeHtml(herb.category || "Uncategorized")}</span>
+      <p><span class="label">Benefits:</span> ${escapeHtml(asArray(herb.benefits).join(", ") || "Not provided")}</p>
+      <p><span class="label">Used for:</span> ${escapeHtml(asArray(herb.used_for).join(", ") || "Not provided")}</p>
+      <p><span class="label">Dosage:</span> ${escapeHtml(herb.dosage || "Not provided")}</p>
+      <p><span class="label">Precautions:</span> ${escapeHtml(asArray(herb.precautions).join("; ") || "Not provided")}</p>
+      <div class="chips">${asArray(herb.forms).map((form) => `<span class="chip">${escapeHtml(form)}</span>`).join("")}</div>
     </article>
   `).join("");
 
@@ -80,11 +89,12 @@ function filterHerbs() {
   render(filtered);
 }
 
-async function loadHerbs() {
-  try {
-    const herbsQuery = query(collection(db, "herbs"), orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(herbsQuery);
+function loadHerbsRealtime() {
+  totalCount.textContent = "Loading herbs...";
+  resultsCount.textContent = "Fetching live herbs data...";
 
+  const herbsQuery = query(collection(db, "herbs"), orderBy("createdAt", "desc"));
+  onSnapshot(herbsQuery, (snapshot) => {
     herbalEncyclopedia = snapshot.docs.map((item) => ({
       id: item.id,
       ...item.data()
@@ -93,16 +103,16 @@ async function loadHerbs() {
     totalCount.textContent = `${herbalEncyclopedia.length} AYUSH herbs`;
     populateCategories();
     filterHerbs();
-  } catch (error) {
+  }, (error) => {
     console.error(error);
     totalCount.textContent = "Could not load herbs";
     resultsCount.textContent = "Firestore connection failed. Please check Firebase config and rules.";
     herbGrid.innerHTML = "";
     emptyState.hidden = false;
-  }
+  });
 }
 
 searchInput.addEventListener("input", filterHerbs);
 categoryFilter.addEventListener("change", filterHerbs);
 
-loadHerbs();
+loadHerbsRealtime();
