@@ -1,1 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AYUSH Herbal Encyclopedia</title>
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    * { box-sizing: border-box; }
 
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 10%;
+      background: rgba(0, 0, 0, 0.35);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    nav h2 { margin: 0; color: var(--accent); }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 20px;
+      margin: 0;
+      padding: 0;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: var(--text-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    nav a.active { color: var(--accent); }
+
+    .page {
+      width: min(1100px, 92%);
+      margin: 24px auto 40px;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    h1 { margin: 0; }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .filters input,
+    .filters select {
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-family: inherit;
+      background: rgba(255,255,255,0.85);
+      color: #111;
+    }
+
+    .results-count {
+      opacity: 0.85;
+      margin-bottom: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(12px);
+    }
+
+    .card h3 { margin: 0; color: var(--accent); }
+    .card .category {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .card p { margin: 10px 0; line-height: 1.45; }
+    .label { font-weight: 600; }
+
+    .chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .chip {
+      font-size: 0.82rem;
+      background: rgba(255,255,255,0.15);
+      border-radius: 999px;
+      padding: 4px 10px;
+    }
+
+    .empty {
+      text-align: center;
+      opacity: 0.9;
+      margin-top: 30px;
+    }
+
+    @media (max-width: 700px) {
+      nav { padding: 14px 4%; }
+      .filters { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <button id="themeToggle">🌙</button>
+
+  <nav>
+    <h2>🌿 AYUSH AI</h2>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="herbs.html" class="active">Herbs</a></li>
+      <li><a href="admin.html">Admin</a></li>
+      <li><a href="login.html">Login</a></li>
+    </ul>
+  </nav>
+
+  <main class="page">
+    <div class="header-row">
+      <h1>Herbal Encyclopedia</h1>
+      <span>12 AYUSH herbs</span>
+    </div>
+
+    <div class="filters">
+      <input id="searchInput" type="search" placeholder="Search by herb, benefit, or condition" />
+      <select id="categoryFilter">
+        <option value="">All categories</option>
+      </select>
+    </div>
+
+    <p id="resultsCount" class="results-count"></p>
+    <section id="herbGrid" class="grid" aria-live="polite"></section>
+    <p id="emptyState" class="empty" hidden>No herbs matched your filters.</p>
+  </main>
+
+  <script src="theme.js"></script>
+  <script>
+    const herbalEncyclopedia = [
+      {
+        name: "Ashwagandha",
+        category: "Adaptogen",
+        benefits: ["Reduces stress and anxiety", "Improves sleep quality", "Boosts immunity", "Enhances stamina"],
+        used_for: ["Stress", "Fatigue", "Weak immunity"],
+        forms: ["Powder", "Capsule", "Tablet"],
+        dosage: "1 teaspoon powder or 1 capsule daily",
+        precautions: ["Consult doctor if pregnant", "Thyroid patients should seek medical advice"]
+      },
+      {
+        name: "Tulsi",
+        category: "Immunity Herb",
+        benefits: ["Helps in cough and cold", "Boosts immunity", "Anti-inflammatory", "Improves respiratory health"],
+        used_for: ["Cough", "Cold", "Fever"],
+        forms: ["Leaves", "Kadha", "Tablet"],
+        dosage: "1 cup kadha 1-2 times daily",
+        precautions: ["Excess use may cause acidity"]
+      },
+      {
+        name: "Neem",
+        category: "Detox Herb",
+        benefits: ["Purifies blood", "Improves skin health", "Supports digestion", "Anti-bacterial"],
+        used_for: ["Skin issues", "Acne", "Detox"],
+        forms: ["Powder", "Tablet", "Juice"],
+        dosage: "1 teaspoon powder daily",
+        precautions: ["Avoid during pregnancy"]
+      },
+      {
+        name: "Giloy",
+        category: "Immunity Booster",
+        benefits: ["Reduces fever", "Boosts immunity", "Supports liver health", "Anti-inflammatory"],
+        used_for: ["Fever", "Low immunity"],
+        forms: ["Juice", "Tablet", "Kadha"],
+        dosage: "10-20 ml juice daily",
+        precautions: ["Autoimmune patients should consult doctor"]
+      },
+      {
+        name: "Amla",
+        category: "Vitamin C Source",
+        benefits: ["Boosts immunity", "Improves skin and hair", "Enhances digestion", "Rich in antioxidants"],
+        used_for: ["Low immunity", "Hair fall"],
+        forms: ["Juice", "Powder", "Raw fruit"],
+        dosage: "20 ml juice daily",
+        precautions: ["Monitor use in low blood sugar patients"]
+      },
+      {
+        name: "Brahmi",
+        category: "Brain Tonic",
+        benefits: ["Improves memory", "Enhances focus", "Reduces anxiety", "Supports brain health"],
+        used_for: ["Memory loss", "Anxiety"],
+        forms: ["Powder", "Capsule"],
+        dosage: "1 teaspoon powder daily",
+        precautions: ["Consult doctor for long-term use"]
+      },
+      {
+        name: "Shatavari",
+        category: "Women's Health",
+        benefits: ["Supports hormonal balance", "Improves reproductive health", "Boosts immunity"],
+        used_for: ["Hormonal imbalance", "Weak immunity"],
+        forms: ["Powder", "Capsule"],
+        dosage: "1 teaspoon daily",
+        precautions: ["Consult doctor if pregnant"]
+      },
+      {
+        name: "Turmeric",
+        category: "Anti-inflammatory",
+        benefits: ["Reduces inflammation", "Supports joint health", "Boosts immunity", "Antioxidant"],
+        used_for: ["Joint pain", "Inflammation"],
+        forms: ["Powder", "Capsule", "Milk mix"],
+        dosage: "1/2 teaspoon daily",
+        precautions: ["Avoid excessive use in gallbladder issues"]
+      },
+      {
+        name: "Triphala",
+        category: "Digestive Tonic",
+        benefits: ["Improves digestion", "Supports detox", "Boosts metabolism"],
+        used_for: ["Constipation", "Digestive issues"],
+        forms: ["Powder", "Tablet"],
+        dosage: "1 teaspoon before bedtime",
+        precautions: ["Avoid excessive use"]
+      },
+      {
+        name: "Mulethi",
+        category: "Respiratory Herb",
+        benefits: ["Relieves cough", "Soothes throat", "Supports respiratory system"],
+        used_for: ["Cough", "Sore throat"],
+        forms: ["Powder", "Kadha"],
+        dosage: "1 teaspoon daily",
+        precautions: ["High blood pressure patients consult doctor"]
+      },
+      {
+        name: "Arjuna",
+        category: "Heart Tonic",
+        benefits: ["Supports heart health", "Improves circulation", "Reduces cholesterol"],
+        used_for: ["Heart weakness", "High cholesterol"],
+        forms: ["Powder", "Tablet"],
+        dosage: "1 teaspoon daily",
+        precautions: ["Consult cardiologist if heart patient"]
+      },
+      {
+        name: "Ginger",
+        category: "Digestive & Anti-inflammatory",
+        benefits: ["Improves digestion", "Relieves nausea", "Reduces inflammation", "Boosts immunity"],
+        used_for: ["Nausea", "Cold", "Indigestion"],
+        forms: ["Raw", "Powder", "Tea"],
+        dosage: "1-2 grams daily",
+        precautions: ["Avoid excessive use in acidity"]
+      }
+    ];
+
+    const herbGrid = document.getElementById("herbGrid");
+    const searchInput = document.getElementById("searchInput");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const resultsCount = document.getElementById("resultsCount");
+    const emptyState = document.getElementById("emptyState");
+
+    const categories = [...new Set(herbalEncyclopedia.map((herb) => herb.category))].sort();
+    categories.forEach((category) => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = category;
+      categoryFilter.appendChild(option);
+    });
+
+    function render(herbs) {
+      herbGrid.innerHTML = herbs.map((herb) => `
+        <article class="card">
+          <h3>${herb.name}</h3>
+          <span class="category">${herb.category}</span>
+          <p><span class="label">Benefits:</span> ${herb.benefits.join(", ")}</p>
+          <p><span class="label">Used for:</span> ${herb.used_for.join(", ")}</p>
+          <p><span class="label">Dosage:</span> ${herb.dosage}</p>
+          <p><span class="label">Precautions:</span> ${herb.precautions.join("; ")}</p>
+          <div class="chips">${herb.forms.map((form) => `<span class="chip">${form}</span>`).join("")}</div>
+        </article>
+      `).join("");
+
+      resultsCount.textContent = `Showing ${herbs.length} of ${herbalEncyclopedia.length} herbs`;
+      emptyState.hidden = herbs.length !== 0;
+    }
+
+    function filterHerbs() {
+      const query = searchInput.value.trim().toLowerCase();
+      const selectedCategory = categoryFilter.value;
+
+      const filtered = herbalEncyclopedia.filter((herb) => {
+        const haystack = [
+          herb.name,
+          herb.category,
+          ...herb.benefits,
+          ...herb.used_for,
+          ...herb.forms,
+          herb.dosage,
+          ...herb.precautions
+        ].join(" ").toLowerCase();
+
+        const matchesQuery = !query || haystack.includes(query);
+        const matchesCategory = !selectedCategory || herb.category === selectedCategory;
+
+        return matchesQuery && matchesCategory;
+      });
+
+      render(filtered);
+    }
+
+    searchInput.addEventListener("input", filterHerbs);
+    categoryFilter.addEventListener("change", filterHerbs);
+    render(herbalEncyclopedia);
+  </script>
+</body>
+</html>
