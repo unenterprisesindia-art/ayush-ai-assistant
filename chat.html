@@ -90,6 +90,26 @@ async function sendMessage(){
   input.value="";
 }
 </script>
+  
+<script>
+  window.watsonAssistantChatOptions = {
+    integrationID: "8e32cc13-c4cb-4bdd-9363-9ba3445d6135",
+    region: "au-syd",
+    serviceInstanceID: "d0c42d9b-89f0-4285-99ea-d55452be84c4",
+    onLoad: async (instance) => {
+      await instance.render();
+    }
+  };
 
+  setTimeout(function () {
+    const chatScript = document.createElement('script');
+    chatScript.src =
+      'https://web-chat.global.assistant.watson.appdomain.cloud/versions/' +
+      (window.watsonAssistantChatOptions.clientVersion || 'latest') +
+      '/WatsonAssistantChatEntry.js';
+    document.head.appendChild(chatScript);
+  });
+</script>
+  
 </body>
 </html>
