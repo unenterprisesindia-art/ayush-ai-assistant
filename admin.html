@@ -29,7 +29,7 @@
 
     .entry-form {
       display: grid;
-      grid-template-columns: 1fr 2fr auto;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
       margin-bottom: 16px;
     }
@@ -45,11 +45,14 @@
 
     .entry-form textarea { resize: vertical; min-height: 48px; }
 
+    entry-form .full-width { grid-column: 1 / -1; }
+    
     .entry-form button {
       background: var(--accent);
       color: #000;
       font-weight: 600;
-      cursor: pointer;
+      cujustify-self: start;rsor: pointer;
+      
     }
 
     .entry-list { display: grid; gap: 12px; }
@@ -63,8 +66,8 @@
       gap: 16px;
     }
 
-    .entry-item h3 { margin: 0 0 4px; color: var(--accent); }
-    .entry-item p { margin: 0; opacity: 0.9; }
+    .entry-item h3 { margin: 0 0 6px; color: var(--accent); }
+    .entry-item p { margin: 4px 0; opacity: 0.9; }
 
     .danger-btn {
       align-self: flex-start;
@@ -80,6 +83,7 @@
 
     @media (max-width: 700px) {
       .entry-form { grid-template-columns: 1fr; }
+      .entry-form .full-width { grid-column: auto; }
     }
   </style>
 </head>
@@ -88,16 +92,21 @@
 
   <div class="admin-container">
     <div class="admin-header">
-      <h1 class="admin-title">🛠️ AYUSH Admin Panel</h1>
-      <a href="index.html" class="btn">Back to Home</a>
+      <h1 class="admin-title">🛠️ AYUSH Herbs Admin Panel</h1>
+      <a href="herbs.html" class="btn">View Herbs Page</a>
     </div>
 
     <p class="status-line" id="status">Connecting to Firestore...</p>
 
-    <form class="entry-form" id="remedyForm">
-      <input id="titleInput" type="text" placeholder="Remedy title" required>
-      <textarea id="descriptionInput" placeholder="Remedy details" required></textarea>
-      <button type="submit">Add Remedy</button>
+    <form class="entry-form" id="herbForm">
+      <input id="nameInput" type="text" placeholder="Herb name" required>
+      <input id="categoryInput" type="text" placeholder="Category" required>
+      <textarea id="benefitsInput" placeholder="Benefits (comma separated)" class="full-width" required></textarea>
+      <textarea id="usedForInput" placeholder="Used for (comma separated)" required></textarea>
+      <textarea id="formsInput" placeholder="Forms (comma separated)" required></textarea>
+      <input id="dosageInput" type="text" placeholder="Dosage guidance" class="full-width" required>
+      <textarea id="precautionsInput" placeholder="Precautions (comma separated)" class="full-width" required></textarea>
+      <button type="submit" class="full-width">Add Herb Details</button>
     </form>
 
     <div id="entryList" class="entry-list"></div>
