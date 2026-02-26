@@ -1,33 +1,317 @@
-<section class="chatbot-section glass" id="chatbot">
-  <div class="chatbot-info">
-    <h2>🧠 Watsonx Assistant Chat</h2>
-    <p>
-      Use the IBM watsonx Assistant launcher at the bottom-right to ask about common herbs,
-      daily routines, dosha-friendly habits, and safe usage tips.
-    </p>
-    <ul class="feature-list">
-      <li><strong>Single assistant experience:</strong> No local chatbot, only watsonx Assistant.</li>
-      <li><strong>Reliable responses:</strong> Powered by your configured IBM assistant instance.</li>
-      <li><strong>Always available:</strong> Open chat anytime from the floating launcher.</li>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AYUSH AI Assistant</title>
+  <link rel="stylesheet" href="theme.css">
+  <style>
+    .hero {
+      margin-top: 18px;
+      padding: 54px min(6vw, 60px);
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 26px;
+      align-items: center;
+    }
+    .hero h1 { font-size: clamp(2rem, 4vw, 3.5rem); margin: 0 0 14px; line-height: 1.1; }
+    .hero p { margin: 0 0 26px; color: var(--text-muted); }
+    .hero-badge { display: inline-block; padding: 6px 12px; border-radius: 999px; margin-bottom: 16px; background: rgba(103, 242, 196, 0.2); }
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .hero-side { padding: 20px; border-radius: 16px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); }
+    .hero-side h3 { margin-top: 0; color: var(--accent); }
+
+    .section-title { margin: 36px 0 16px; font-size: 1.55rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .card { padding: 18px; border-radius: 16px; background: var(--surface-strong); border: 1px solid var(--border); }
+    .card h3 { margin: 0 0 8px; color: var(--accent); }
+    .card p { margin: 0; color: var(--text-muted); }
+
+    .chatbot-section {
+      margin-top: 28px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    .chatbot-info h2 { margin: 0 0 12px; font-size: 1.8rem; }
+    .chatbot-info p { margin: 0 0 16px; color: var(--text-muted); }
+    .feature-list { margin: 0; padding-left: 20px; color: var(--text-muted); }
+    .feature-list li { margin-bottom: 8px; }
+
+    .chat-shell {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    }
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: rgba(103, 242, 196, 0.15);
+      border-bottom: 1px solid var(--border);
+    }
+    .chat-dot { width: 10px; height: 10px; border-radius: 50%; background: #2af0b2; box-shadow: 0 0 14px #2af0b2; }
+    .chat-title { margin: 0; font-size: 1rem; }
+    .chat-subtitle { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
+
+    .chat-messages {
+      padding: 16px;
+      min-height: 300px;
+      max-height: 360px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .message {
+      max-width: 88%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      line-height: 1.45;
+      font-size: 0.95rem;
+    }
+    .message.user {
+      align-self: end;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #052230;
+      border-bottom-right-radius: 4px;
+      font-weight: 600;
+    }
+    .message.bot {
+      align-self: start;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+      white-space: pre-wrap;
+    }
+
+    .quick-prompts {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 0 16px 12px;
+    }
+    .quick-prompts button {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-color);
+      border-radius: 999px;
+      padding: 6px 11px;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .chat-input {
+      display: flex;
+      gap: 8px;
+      padding: 12px 14px 14px;
+      border-top: 1px solid var(--border);
+      background: rgba(0,0,0,0.14);
+    }
+    .chat-input input {
+      flex: 1;
+      border-radius: 999px;
+      padding: 10px 14px;
+      border: 1px solid transparent;
+    }
+
+    .chat-note {
+      margin: 8px 0 0;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      opacity: 0.9;
+    }
+    footer { text-align: center; padding: 28px 12px 44px; color: var(--text-muted); }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .chatbot-section { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <button id="themeToggle">🌙</button>
+
+  <nav class="site-nav">
+    <h2 class="brand">🌿 AYUSH AI</h2>
+    <ul class="nav-list">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="herbs.html">Herbs</a></li>
+      <li><a href="admin.html">Admin</a></li>
     </ul>
-    <p class="chat-note">For persistent symptoms, always consult a qualified AYUSH or medical professional.</p>
-  </div>
-</section>
+    
+  </nav>
 
-<script>
-  window.watsonAssistantChatOptions = {
-    integrationID: "YOUR_INTEGRATION_ID",
-    region: "YOUR_REGION",
-    serviceInstanceID: "YOUR_SERVICE_INSTANCE_ID",
-    onLoad: async (instance) => instance.render()
-  };
+  <main class="page-shell">
+    <section class="hero glass">
+      <div>
+        <span class="hero-badge">Trusted traditional wellness, guided by AI</span>
+        <h1>Beautiful, simple <span style="color:var(--accent)">AYUSH Assistant</span> for daily care</h1>
+        <p>Get herbal suggestions, wellness education, and natural care support through an elegant experience designed for everyone.</p>
+        <div class="hero-actions">
+          <a href="herbs.html" class="btn">Explore Herbs</a>
+          <a href="#features" class="btn secondary">See Features</a>
+        </div>
+      </div>
+      <aside class="hero-side">
+        <h3>✨ Assistant Highlights</h3>
+        <p>• Guided chatbot support with Watson AI integration</p>
+        <p>• Herbal encyclopedia with search + category filters</p>
+        <p>• Responsive theme with modern light/dark mode</p>
+      </aside>
+    </section>
 
-  setTimeout(() => {
-    const t = document.createElement("script");
-    t.src =
-      "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" +
-      (window.watsonAssistantChatOptions.clientVersion || "latest") +
-      "/WatsonAssistantChatEntry.js";
-    document.head.appendChild(t);
-  });
-</script>
+    <section id="features">
+      <h2 class="section-title">Popular AYUSH Herbs</h2>
+      <div class="grid">
+        <article class="card"><h3>Tulsi</h3><p>Supports immunity and everyday respiratory health.</p></article>
+        <article class="card"><h3>Ashwagandha</h3><p>Helps with stress balance and restful sleep cycles.</p></article>
+        <article class="card"><h3>Turmeric</h3><p>Known for inflammation support and joint comfort.</p></article>
+      </div>
+
+      <h2 class="section-title">Core Features</h2>
+      <div class="grid">
+        <article class="card"><h3>🤖 AI Consultation</h3><p>Fast and intelligent guidance powered by IBM watsonx Assistant.</p></article>
+        <article class="card"><h3>🌿 Herbal Encyclopedia</h3><p>Find herbs, benefits, forms, and precautions in one place.</p></article>
+        <article class="card"><h3>📊 Dosha-aware Insights</h3><p>Understand how natural habits fit your wellness routine.</p></article>
+        <article class="card"><h3>🔐 Secure Access</h3><p>Firebase-backed sign in for controlled administration.</p></article>
+      </div>
+    </section>
+
+    <section class="chatbot-section glass" id="chatbot">
+      <div class="chatbot-info">
+        <h2>🧠 Detailed Wellness Chatbot</h2>
+        <p>
+          Ask the assistant about common herbs, daily routines, dosha-friendly habits, and safe usage tips.
+          The responses are rich, easy to understand, and designed to feel like a guided consultation.
+        </p>
+        <ul class="feature-list">
+          <li><strong>Detail-rich guidance:</strong> Benefits, usage, and practical wellness context.</li>
+          <li><strong>Smart prompt chips:</strong> One tap to ask common AYUSH questions.</li>
+          <li><strong>Beautiful UI:</strong> Glassmorphism card, gradients, and mobile-friendly layout.</li>
+        </ul>
+        <p class="chat-note">For persistent symptoms, always consult a qualified AYUSH or medical professional.</p>
+      </div>
+
+      <div class="chat-shell" aria-label="AYUSH Chatbot">
+        <div class="chat-header">
+          <span class="chat-dot" aria-hidden="true"></span>
+          <div>
+            <h3 class="chat-title">AYUSH Wellness Bot</h3>
+            <p class="chat-subtitle">Ask about herbs, immunity, digestion, stress, or daily routine</p>
+          </div>
+        </div>
+
+        <div id="chatMessages" class="chat-messages"></div>
+
+        <div class="quick-prompts">
+          <button type="button" data-prompt="Best herb for stress relief?">Stress Relief</button>
+          <button type="button" data-prompt="How can I improve immunity naturally?">Immunity</button>
+          <button type="button" data-prompt="Tell me a simple daily AYUSH routine.">Daily Routine</button>
+          <button type="button" data-prompt="Herbs that help with digestion?">Digestion</button>
+        </div>
+
+        <form id="chatForm" class="chat-input">
+          <input id="chatInput" type="text" placeholder="Type your AYUSH question..." required>
+          <button class="btn" type="submit">Send</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>© 2026 AYUSH Digital Assistant | Crafted with care</footer>
+
+  <script src="theme.js"></script>
+  <script>
+    const chatMessages = document.getElementById("chatMessages");
+    const chatInput = document.getElementById("chatInput");
+    const chatForm = document.getElementById("chatForm");
+    const promptButtons = document.querySelectorAll("[data-prompt]");
+
+    const botReplies = [
+      {
+        keywords: ["stress", "anxiety", "sleep", "calm"],
+        reply:
+          "For stress balance, Ashwagandha is commonly used in AYUSH traditions.\n\n• Why: It is considered an adaptogenic herb that supports resilience and relaxation.\n• How people use it: Often with warm milk or water in the evening.\n• Complementary habits: Deep breathing (5 minutes), regular sleep timing, and lighter dinners improve outcomes.\n\nIf you take thyroid, sedative, or blood pressure medicines, please ask your clinician before daily use."
+      },
+      {
+        keywords: ["immunity", "cold", "cough", "respiratory"],
+        reply:
+          "To support immunity, many people combine Tulsi, Turmeric, and Guduchi.\n\n• Tulsi: Traditionally supports respiratory comfort.\n• Turmeric: Known for anti-inflammatory support (often paired with black pepper).\n• Guduchi: Used in classical formulations for immune wellness.\n\nTry a gentle routine: warm water in morning, spice-forward meals, and 20–30 min daily movement."
+      },
+      {
+        keywords: ["digestion", "bloating", "acidity", "gas"],
+        reply:
+          "For digestion, AYUSH recommendations often include Ajwain, Fennel, and Ginger.\n\n• After meals: Fennel seeds may reduce heaviness.\n• Before meals: Small ginger + pinch of rock salt is a traditional approach.\n• Bloating: Ajwain water can be soothing for some people.\n\nEat at regular timings and avoid very late-night meals for best digestive rhythm."
+      },
+      {
+        keywords: ["routine", "daily", "dinacharya", "lifestyle"],
+        reply:
+          "A simple AYUSH-inspired daily routine:\n\n1) Wake around sunrise and hydrate with warm water.\n2) 10 minutes of stretching/yoga + 5 minutes breathwork.\n3) Main meal at lunch, lighter dinner before 8 PM.\n4) Herbal support based on need (e.g., Tulsi tea or Triphala at bedtime, if suitable).\n5) Screen-free wind-down 30 minutes before sleep.\n\nConsistency matters more than intensity."
+      }
+    ];
+
+    function addMessage(text, role) {
+      const bubble = document.createElement("div");
+      bubble.className = `message ${role}`;
+      bubble.textContent = text;
+      chatMessages.appendChild(bubble);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function getBotResponse(input) {
+      const normalizedInput = input.toLowerCase();
+      const match = botReplies.find((item) =>
+        item.keywords.some((keyword) => normalizedInput.includes(keyword))
+      );
+
+      if (match) return match.reply;
+
+      return "Great question. Here is a general AYUSH guidance approach:\n\n• Start with symptom pattern (when, how often, triggers).\n• Choose one gentle herb at a time and monitor response for 5–7 days.\n• Combine herbs with food, sleep, movement, and stress regulation for better outcomes.\n\nIf you share your goal (stress, digestion, immunity, sleep, skin), I can give a more detailed plan.";
+    }
+
+    function handleChatPrompt(promptText) {
+      addMessage(promptText, "user");
+      setTimeout(() => addMessage(getBotResponse(promptText), "bot"), 320);
+    }
+
+    addMessage(
+      "Namaste 🙏 I am your AYUSH Wellness Bot. Ask me about herbs, routines, digestion, immunity, stress, and more.",
+      "bot"
+    );
+
+    chatForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+      handleChatPrompt(message);
+      chatInput.value = "";
+    });
+
+    promptButtons.forEach((button) => {
+      button.addEventListener("click", () => handleChatPrompt(button.dataset.prompt));
+    });
+  </script>
+  <script>
+    window.watsonAssistantChatOptions = {
+      integrationID: "8e32cc13-c4cb-4bdd-9363-9ba3445d6135",
+      region: "au-syd",
+      serviceInstanceID: "d0c42d9b-89f0-4285-99ea-d55452be84c4",
+      onLoad: async (instance) => instance.render()
+    };
+
+    setTimeout(() => {
+      const t = document.createElement("script");
+      t.src =
+        "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" +
+        (window.watsonAssistantChatOptions.clientVersion || "latest") +
+        "/WatsonAssistantChatEntry.js";
+      document.head.appendChild(t);
+    });
+  </script>
+</body>
+</html>
