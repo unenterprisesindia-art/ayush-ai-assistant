@@ -8,11 +8,12 @@
   <style>
     .admin-container {
       max-width: 980px;
-      margin: 90px auto;
-      background: var(--card-bg);
+      margin: 26px auto 60px;
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
       border-radius: 20px;
       padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      box-shadow: var(--shadow);
       backdrop-filter: blur(15px);
     }
     .admin-header {
@@ -23,7 +24,7 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-    .admin-title { color: var(--accent); }
+    .admin-title { color: var(--accent); margin: 0; }
     .auth-card {
       padding: 16px;
       border-radius: 14px;
@@ -31,79 +32,37 @@
       margin-bottom: 16px;
       display: grid;
       gap: 10px;
+      border: 1px solid var(--border);
     }
     .auth-card h2 { margin: 0; font-size: 1.1rem; }
-    .auth-form {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-    }
-    .auth-form input,
-    .auth-form button,
-    .signout-btn {
+    .auth-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .auth-form input, .auth-form button, .signout-btn,
+    .entry-form input, .entry-form textarea, .entry-form button,
+    .bulk-upload input, .bulk-upload button {
       border: none;
       border-radius: 10px;
       padding: 10px 12px;
       font-family: inherit;
     }
-    .auth-form button,
-    .signout-btn {
-      background: var(--accent);
-      color: #000;
-      font-weight: 600;
+    .auth-form button, .signout-btn, .entry-form button, .bulk-upload button {
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #031319;
+      font-weight: 700;
       cursor: pointer;
     }
-    .entry-form {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .entry-form input,
-    .entry-form textarea,
-    .entry-form button {
-      border: none;
-      border-radius: 12px;
-      padding: 12px;
-      font-family: inherit;
-    }
+    .entry-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
     .entry-form textarea { resize: vertical; min-height: 48px; }
     .entry-form .full-width { grid-column: 1 / -1; }
-    .entry-form button {
-      background: var(--accent);
-      color: #000;
-      font-weight: 600;
-      cursor: pointer;
-      justify-self: start;
-    }
-    .status-line { opacity: 0.8; margin-bottom: 10px; }
+    .status-line { opacity: 0.9; margin-bottom: 10px; color: var(--text-muted); }
     .bulk-upload {
       margin: 8px 0 20px;
       padding: 14px;
       border-radius: 12px;
       background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
     }
-    .bulk-upload p { margin: 0 0 8px; line-height: 1.4; opacity: 0.92; }
-    .bulk-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
-    .bulk-upload input,
-    .bulk-upload button {
-      border: none;
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-family: inherit;
-    }
-    .bulk-upload button {
-      background: var(--accent);
-      color: #000;
-      font-weight: 600;
-      cursor: pointer;
-    }
+    .bulk-upload p { margin: 0 0 8px; line-height: 1.4; }
+    .bulk-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
     .entry-list { display: grid; gap: 12px; }
     .entry-item {
       background: rgba(255,255,255,0.08);
@@ -112,6 +71,7 @@
       display: flex;
       justify-content: space-between;
       gap: 16px;
+      border: 1px solid var(--border);
     }
     .entry-item h3 { margin: 0 0 6px; color: var(--accent); }
     .entry-item p { margin: 4px 0; opacity: 0.9; }
@@ -123,17 +83,23 @@
       background: #ff4d6d;
       color: #fff;
       cursor: pointer;
+      font-weight: 700;
     }
     #adminContent[hidden] { display: none; }
-    @media (max-width: 700px) {
-      .entry-form,
-      .auth-form { grid-template-columns: 1fr; }
-      .entry-form .full-width { grid-column: auto; }
-    }
+    @media (max-width: 700px) { .entry-form, .auth-form { grid-template-columns: 1fr; } .entry-form .full-width { grid-column: auto; } }
   </style>
 </head>
 <body>
   <button id="themeToggle">🌙</button>
+
+  <nav class="site-nav">
+    <h2 class="brand">🌿 AYUSH AI</h2>
+    <ul class="nav-list">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="herbs.html">Herbs</a></li>
+      <li><a href="admin.html" class="active">Admin</a></li>
+    </ul>
+  </nav>
 
   <div class="admin-container">
     <div class="admin-header">
