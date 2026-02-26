@@ -3,19 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AYUSH Admin Panel</title>
+  <title>AYUSH Herbs Admin Panel</title>
   <link rel="stylesheet" href="theme.css">
   <style>
     .admin-container {
-      max-width: 900px;
-      margin: 100px auto;
+      max-width: 980px;
+      margin: 90px auto;
       background: var(--card-bg);
       border-radius: 20px;
       padding: 24px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
       backdrop-filter: blur(15px);
     }
-
     .admin-header {
       display: flex;
       justify-content: space-between;
@@ -24,16 +23,13 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-
     .admin-title { color: var(--accent); }
-
     .entry-form {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
       margin-bottom: 16px;
     }
-
     .entry-form input,
     .entry-form textarea,
     .entry-form button {
@@ -42,21 +38,44 @@
       padding: 12px;
       font-family: inherit;
     }
-
     .entry-form textarea { resize: vertical; min-height: 48px; }
-
-    entry-form .full-width { grid-column: 1 / -1; }
-    
+    .entry-form .full-width { grid-column: 1 / -1; }
     .entry-form button {
       background: var(--accent);
       color: #000;
       font-weight: 600;
-      cujustify-self: start;rsor: pointer;
-      
+      cursor: pointer;
+      justify-self: start;
     }
-
+    .status-line { opacity: 0.8; margin-bottom: 10px; }
+    .bulk-upload {
+      margin: 8px 0 20px;
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .bulk-upload p { margin: 0 0 8px; line-height: 1.4; opacity: 0.92; }
+    .bulk-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .bulk-upload input,
+    .bulk-upload button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: inherit;
+    }
+    .bulk-upload button {
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+      cursor: pointer;
+    }
     .entry-list { display: grid; gap: 12px; }
-
     .entry-item {
       background: rgba(255,255,255,0.08);
       border-radius: 14px;
@@ -65,10 +84,8 @@
       justify-content: space-between;
       gap: 16px;
     }
-
     .entry-item h3 { margin: 0 0 6px; color: var(--accent); }
     .entry-item p { margin: 4px 0; opacity: 0.9; }
-
     .danger-btn {
       align-self: flex-start;
       border: none;
@@ -78,9 +95,6 @@
       color: #fff;
       cursor: pointer;
     }
-
-    .status-line { opacity: 0.8; margin-bottom: 10px; }
-
     @media (max-width: 700px) {
       .entry-form { grid-template-columns: 1fr; }
       .entry-form .full-width { grid-column: auto; }
@@ -108,6 +122,16 @@
       <textarea id="precautionsInput" placeholder="Precautions (comma separated)" class="full-width" required></textarea>
       <button type="submit" class="full-width">Add Herb Details</button>
     </form>
+
+    <section class="bulk-upload">
+      <p><strong>Bulk CSV upload</strong> (exact headers): <code>name,category,benefits,used_for,forms,dosage,precautions</code></p>
+      <p>For list columns (<code>benefits</code>, <code>used_for</code>, <code>forms</code>, <code>precautions</code>) use <code>|</code> between values.</p>
+      <div class="bulk-actions">
+        <input id="csvInput" type="file" accept=".csv,text/csv">
+        <button id="uploadCsvBtn" type="button">Upload CSV</button>
+        <button id="downloadTemplateBtn" type="button">Download Template</button>
+      </div>
+    </section>
 
     <div id="entryList" class="entry-list"></div>
   </div>
