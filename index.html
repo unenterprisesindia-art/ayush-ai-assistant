@@ -944,13 +944,121 @@
     });
 
     // Watson Assistant integration
+  <!-- ... existing HTML content ... -->
+
+  <script>
     window.watsonAssistantChatOptions = {
       integrationID: "8e32cc13-c4cb-4bdd-9363-9ba3445d6135",
       region: "au-syd",
       serviceInstanceID: "d0c42d9b-89f0-4285-99ea-d55452be84c4",
-      onLoad: async (instance) => instance.render()
+      // Custom onLoad function to style the widget
+      onLoad: async (instance) => {
+        // 1. Define your custom CSS
+        // This matches the AYUSH theme colors defined in your :root variables
+        const customCSS = `
+          /* --- MAIN CONTAINER --- */
+          .WatsonAssistantChatContainer {
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif !important;
+          }
+          
+          /* --- HEADER --- */
+          .WatsonAssistantChatHeader {
+            background: linear-gradient(135deg, #071622, #123247) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+          }
+          .WatsonAssistantChatHeader .base--h1, 
+          .WatsonAssistantChatHeader .bx--header__header-name {
+            color: #67f2c4 !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.02em !important;
+          }
+
+          /* --- MAIN CHAT AREA --- */
+          .WatsonAssistantChatBody {
+            background: radial-gradient(circle at 50% 0%, rgba(103, 242, 196, 0.05), transparent 60%),
+                        linear-gradient(180deg, #0a1e2e, #071622) !important;
+          }
+
+          /* --- USER MESSAGES (Right side) --- */
+          .from-user .Message .Message__message-text {
+            background: linear-gradient(135deg, #67f2c4, #11d39b) !important;
+            color: #04261f !important;
+            border-radius: 18px 18px 4px 18px !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 12px rgba(103, 242, 196, 0.2) !important;
+          }
+
+          /* --- BOT MESSAGES (Left side) --- */
+          .from-watson .Message .Message__message-text {
+            background: rgba(255, 255, 255, 0.06) !important;
+            color: #f3fbff !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            border-radius: 18px 18px 18px 4px !important;
+            backdrop-filter: blur(8px) !important;
+          }
+
+          /* --- INPUT AREA --- */
+          .WatsonAssistantChatInput .bx--text-input {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            color: #f3fbff !important;
+            border-radius: 24px !important;
+            padding-left: 20px !important;
+          }
+          .WatsonAssistantChatInput .bx--text-input::placeholder {
+            color: rgba(243, 251, 255, 0.5) !important;
+          }
+          .WatsonAssistantChatInput .bx--text-input:focus {
+            outline: none !important;
+            border-color: #67f2c4 !important;
+            box-shadow: 0 0 0 2px rgba(103, 242, 196, 0.2) !important;
+          }
+
+          /* --- BUTTONS & SUGGESTIONS --- */
+          .bx--btn--primary {
+            background: #67f2c4 !important;
+            color: #04261f !important;
+            font-weight: 700 !important;
+            border-radius: 999px !important;
+            border: none !important;
+            transition: transform 0.2s ease !important;
+          }
+          .bx--btn--primary:hover {
+            background: #11d39b !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 10px rgba(103, 242, 196, 0.3) !important;
+          }
+          
+          /* --- LAUNCHER BUTTON (The small round button) --- */
+          .WatsonAssistantChatLauncher {
+            background: linear-gradient(135deg, #67f2c4, #11d39b) !important;
+            border-radius: 50% !important;
+            box-shadow: 0 6px 20px rgba(103, 242, 196, 0.4) !important;
+            transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+          }
+          .WatsonAssistantChatLauncher:hover {
+            transform: scale(1.1) rotate(10deg) !important;
+            box-shadow: 0 8px 25px rgba(103, 242, 196, 0.6) !important;
+          }
+          .WatsonAssistantChatLauncher svg {
+            fill: #04261f !important;
+          }
+        `;
+
+        // 2. Inject the CSS into the widget
+        // Note: The widget runs in a Shadow DOM or iframe depending on version.
+        // instance.updateCSS is the supported method for modern Web Chat.
+        if (instance.updateCSS) {
+          instance.updateCSS(customCSS);
+        }
+
+        // 3. Render the widget
+        instance.render();
+      }
     };
 
+    // Loader script
     setTimeout(() => {
       const t = document.createElement("script");
       t.src =
@@ -958,7 +1066,7 @@
         (window.watsonAssistantChatOptions.clientVersion || "latest") +
         "/WatsonAssistantChatEntry.js";
       document.head.appendChild(t);
-    }, 2000);
+    }, 2000); // Delay slightly to ensure page is loaded
   </script>
   <script src="theme.js"></script>
 </body>
