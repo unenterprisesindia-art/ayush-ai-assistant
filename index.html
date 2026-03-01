@@ -221,6 +221,8 @@
       opacity: 0;
       transform: translateX(-20px);
       transition: opacity 0.5s ease 0.1s, transform 0.5s ease 0.1s;
+      position: relative;
+      overflow: hidden;
     }
 
     .hero.visible .hero-badge {
@@ -829,6 +831,7 @@
     <svg viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
   </div>
 
+  <!-- Main Page Scripts -->
   <script>
     // Initialize particles
     const particlesContainer = document.getElementById('particles');
@@ -942,19 +945,16 @@
         }
       });
     });
+  </script>
 
-    // Watson Assistant integration
-  <!-- ... existing HTML content ... -->
-
+  <!-- Watson Assistant Integration -->
   <script>
     window.watsonAssistantChatOptions = {
       integrationID: "8e32cc13-c4cb-4bdd-9363-9ba3445d6135",
       region: "au-syd",
       serviceInstanceID: "d0c42d9b-89f0-4285-99ea-d55452be84c4",
-      // Custom onLoad function to style the widget
       onLoad: async (instance) => {
-        // 1. Define your custom CSS
-        // This matches the AYUSH theme colors defined in your :root variables
+        // Custom CSS for Watson Chat to match AYUSH Dark Theme
         const customCSS = `
           /* --- MAIN CONTAINER --- */
           .WatsonAssistantChatContainer {
@@ -1046,19 +1046,14 @@
           }
         `;
 
-        // 2. Inject the CSS into the widget
-        // Note: The widget runs in a Shadow DOM or iframe depending on version.
-        // instance.updateCSS is the supported method for modern Web Chat.
+        // Inject CSS and Render
         if (instance.updateCSS) {
           instance.updateCSS(customCSS);
         }
-
-        // 3. Render the widget
         instance.render();
       }
     };
 
-    // Loader script
     setTimeout(() => {
       const t = document.createElement("script");
       t.src =
@@ -1066,8 +1061,9 @@
         (window.watsonAssistantChatOptions.clientVersion || "latest") +
         "/WatsonAssistantChatEntry.js";
       document.head.appendChild(t);
-    }, 2000); // Delay slightly to ensure page is loaded
+    }, 2000);
   </script>
+  
   <script src="theme.js"></script>
 </body>
 </html>
