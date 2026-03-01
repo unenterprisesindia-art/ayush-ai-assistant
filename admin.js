@@ -120,25 +120,29 @@ function toArray(text) {
 
 function renderEntries(items) {
   if (!items.length) {
-    entryList.innerHTML = "<p style='opacity:0.7; text-align:center;'>No herbs added yet.</p>";
+    entryList.innerHTML = "<p style='opacity:0.7; text-align:center; padding:20px;'>No herbs added yet.</p>";
     return;
   }
 
-  entryList.innerHTML = items.map((item, index) => `
-    <article class="entry-item" style="animation-delay: ${index * 0.05}s">
-      <div>
-        <h3>${escapeHtml(item.name)}</h3>
-        <p><strong>Category:</strong> ${escapeHtml(item.category)}</p>
-        <p><strong>Benefits:</strong> ${escapeHtml((item.benefits || []).join(", "))}</p>
-        <p><strong>Used for:</strong> ${escapeHtml((item.used_for || []).join(", "))}</p>
-        <p><strong>Forms:</strong> ${escapeHtml((item.forms || []).join(", "))}</p>
-        <p><strong>Image:</strong> ${item.image_url ? `<a href="${escapeHtml(item.image_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.image_url)}</a>` : "-"}</p>
-        <p><strong>Dosage:</strong> ${escapeHtml(item.dosage || "-")}</p>
-        <p><strong>Precautions:</strong> ${escapeHtml((item.precautions || []).join(", "))}</p>
-      </div>
-      <button class="danger-btn" data-id="${item.id}">Delete</button>
-    </article>
-  `).join("");
+  entryList.innerHTML = items.map((item, index) => {
+    // Generate Image Tag or Placeholder
+    const imgHtml = item.image_url 
+      ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}" class="entry-thumb" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%23071622%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2367f2c4%22 font-size=%2212%22%3ENo Image%3C/text%3E%3C/svg%3E'">`
+      : `<div class="entry-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.8rem;">No Image</div>`;
+
+    return `
+      <article class="entry-item" style="animation-delay: ${index * 0.03}s">
+        ${imgHtml}
+        <div class="entry-content">
+          <h3>${escapeHtml(item.name)}</h3>
+          <p><strong>Category:</strong> ${escapeHtml(item.category)}</p>
+          <p><strong>Benefits:</strong> ${escapeHtml((item.benefits || []).join(", "))}</p>
+          <p><strong>Dosage:</strong> ${escapeHtml(item.dosage || "-")}</p>
+        </div>
+        <button class="danger-btn" data-id="${item.id}">Delete</button>
+      </article>
+    `;
+  }).join("");
 }
 
 function chunk(array, size) {
