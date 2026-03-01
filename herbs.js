@@ -13,6 +13,10 @@ const resultsCount = document.getElementById("resultsCount");
 const emptyState = document.getElementById("emptyState");
 const totalCount = document.getElementById("totalCount");
 
+// Loader Element
+const loader = document.getElementById("loader");
+let isInitialLoad = true;
+
 let herbalEncyclopedia = [];
 
 function asArray(value) {
@@ -28,10 +32,16 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function hideLoader() {
+  if (loader) {
+    loader.classList.add("hidden");
+  }
+}
+
 function render(herbs) {
   herbGrid.innerHTML = herbs.map((herb) => `
     <article class="card">
-      ${herb.image_url ? `<img src="${escapeHtml(herb.image_url)}" alt="${escapeHtml(herb.name || "Herb image")}" loading="lazy" style="width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.14);">` : ""}
+      ${herb.image_url ? `<img src="${escapeHtml(herb.image_url)}" alt="${escapeHtml(herb.name || "Herb image")}" loading="lazy" style="width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--border);">` : ""}
       <h3>${escapeHtml(herb.name || "Unknown Herb")}</h3>
       <span class="category">${escapeHtml(herb.category || "Uncategorized")}</span>
       <p><span class="label">Benefits:</span> ${escapeHtml(asArray(herb.benefits).join(", ") || "Not provided")}</p>
@@ -91,10 +101,9 @@ function filterHerbs() {
 }
 
 function loadHerbsRealtime() {
-  totalCount.textContent = "Loading herbs...";
-  resultsCount.textContent = "Fetching live herbs data...";
-
+  // Text is now handled by the HTML loader, so we can remove the "Loading..." text here
   const herbsQuery = query(collection(db, "herbs"), orderBy("createdAt", "desc"));
+  
   onSnapshot(herbsQuery, (snapshot) => {
     herbalEncyclopedia = snapshot.docs.map((item) => ({
       id: item.id,
@@ -104,12 +113,24 @@ function loadHerbsRealtime() {
     totalCount.textContent = `${herbalEncyclopedia.length} AYUSH herbs`;
     populateCategories();
     filterHerbs();
+
+    // Hide loader after first successful data fetch
+    if (isInitialLoad) {
+      hideLoader();
+      isInitialLoad = false;
+    }
   }, (error) => {
     console.error(error);
     totalCount.textContent = "Could not load herbs";
     resultsCount.textContent = "Firestore connection failed. Please check Firebase config and rules.";
     herbGrid.innerHTML = "";
     emptyState.hidden = false;
+    
+    // Ensure loader is hidden even on error
+    if (isInitialLoad) {
+      hideLoader();
+      isInitialLoad = false;
+    }
   });
 }
 
