@@ -13,9 +13,11 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
   writeBatch
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
+// DOM Elements
 const statusLine = document.getElementById("status");
 const authMessage = document.getElementById("authMessage");
 const authForm = document.getElementById("authForm");
@@ -35,11 +37,16 @@ const formsInput = document.getElementById("formsInput");
 const imageUrlInput = document.getElementById("imageUrlInput");
 const dosageInput = document.getElementById("dosageInput");
 const precautionsInput = document.getElementById("precautionsInput");
+const editIdInput = document.getElementById("editIdInput"); // Hidden input for ID
+
+const submitBtn = document.getElementById("submitBtn");
+const cancelEditBtn = document.getElementById("cancelEditBtn");
 
 const csvInput = document.getElementById("csvInput");
 const uploadCsvBtn = document.getElementById("uploadCsvBtn");
 const downloadTemplateBtn = document.getElementById("downloadTemplateBtn");
 
+// State
 const herbsCollection = collection(db, "herbs");
 const CSV_HEADERS = ["name", "category", "benefits", "used_for", "forms", "image_url", "dosage", "precautions"];
 const BATCH_LIMIT = 450;
@@ -47,7 +54,9 @@ const ADMIN_EMAILS = ["unenterprisesindia@gmail.com"];
 
 let unsubscribeHerbs = null;
 let adminAuthorized = false;
+let allHerbs = []; // Store local copy for editing lookup
 
+// Auth Functions
 function isAuthorizedAdmin(user) {
   const email = user?.email?.toLowerCase();
   return Boolean(email && ADMIN_EMAILS.includes(email));
@@ -63,6 +72,7 @@ function setAdminVisibility(isVisible) {
   }
 }
 
+// Utility Functions
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -118,14 +128,16 @@ function toArray(text) {
     .filter(Boolean);
 }
 
+// Render List
 function renderEntries(items) {
+  allHerbs = items; // Store for editing
+  
   if (!items.length) {
     entryList.innerHTML = "<p style='opacity:0.7; text-align:center; padding:20px;'>No herbs added yet.</p>";
     return;
   }
 
   entryList.innerHTML = items.map((item, index) => {
-    // Generate Image Tag or Placeholder
     const imgHtml = item.image_url 
       ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}" class="entry-thumb" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%23071622%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2367f2c4%22 font-size=%2212%22%3ENo Image%3C/text%3E%3C/svg%3E'">`
       : `<div class="entry-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.8rem;">No Image</div>`;
@@ -139,7 +151,10 @@ function renderEntries(items) {
           <p><strong>Benefits:</strong> ${escapeHtml((item.benefits || []).join(", "))}</p>
           <p><strong>Dosage:</strong> ${escapeHtml(item.dosage || "-")}</p>
         </div>
-        <button class="danger-btn" data-id="${item.id}">Delete</button>
+        <div class="action-group">
+            <button class="edit-btn" data-id="${item.id}">Edit</button>
+            <button class="danger-btn" data-id="${item.id}">Delete</button>
+        </div>
       </article>
     `;
   }).join("");
@@ -153,6 +168,7 @@ function chunk(array, size) {
   return result;
 }
 
+// Firestore Logic
 function stopHerbListener() {
   if (unsubscribeHerbs) {
     unsubscribeHerbs();
@@ -176,6 +192,42 @@ function startHerbListener() {
   });
 }
 
+// Edit Logic
+function startEdit(id) {
+  const herb = allHerbs.find(h => h.id === id);
+  if (!herb) return;
+
+  // Populate form
+  nameInput.value = herb.name || "";
+  categoryInput.value = herb.category || "";
+  benefitsInput.value = (herb.benefits || []).join(", ");
+  usedForInput.value = (herb.used_for || []).join(", ");
+  formsInput.value = (herb.forms || []).join(", ");
+  imageUrlInput.value = herb.image_url || "";
+  dosageInput.value = herb.dosage || "";
+  precautionsInput.value = (herb.precautions || []).join(", ");
+  
+  // Set ID and change UI mode
+  editIdInput.value = id;
+  submitBtn.textContent = "Update Herb";
+  cancelEditBtn.hidden = false;
+  
+  // Scroll to form
+  herbForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  statusLine.textContent = `Editing: ${herb.name}`;
+  statusLine.style.color = "var(--accent)";
+}
+
+function cancelEdit() {
+  herbForm.reset();
+  editIdInput.value = "";
+  submitBtn.textContent = "Add Herb Details";
+  cancelEditBtn.hidden = true;
+  statusLine.textContent = "Add new herb or select one to edit.";
+  statusLine.style.color = "";
+}
+
+// CSV Logic
 async function uploadCsv() {
   if (!adminAuthorized) {
     statusLine.textContent = "Admin authorization required.";
@@ -267,6 +319,7 @@ function downloadTemplate() {
   URL.revokeObjectURL(url);
 }
 
+// Event Listeners
 authForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const email = emailInput.value.trim();
@@ -294,7 +347,7 @@ signOutBtn.addEventListener("click", async () => {
 
 onAuthStateChanged(auth, async (user) => {
   adminAuthorized = isAuthorizedAdmin(user);
-  authMessage.style.color = ""; // Reset color
+  authMessage.style.color = "";
   
   if (!user) {
     setAdminVisibility(false);
@@ -338,7 +391,6 @@ herbForm.addEventListener("submit", async (event) => {
     image_url: imageUrlInput.value.trim(),
     dosage: dosageInput.value.trim(),
     precautions: toArray(precautionsInput.value),
-    createdAt: serverTimestamp()
   };
 
   if (!payload.name || !payload.category || !payload.dosage) {
@@ -346,53 +398,74 @@ herbForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  const editId = editIdInput.value;
+
   try {
-    await addDoc(herbsCollection, payload);
-    herbForm.reset();
-    statusLine.textContent = "Herb details added to Firestore.";
+    if (editId) {
+      // Update existing
+      await updateDoc(doc(db, "herbs", editId), payload);
+      statusLine.textContent = "Herb updated successfully.";
+    } else {
+      // Add new
+      payload.createdAt = serverTimestamp();
+      await addDoc(herbsCollection, payload);
+      statusLine.textContent = "Herb details added to Firestore.";
+    }
     
-    // Visual feedback flash
+    cancelEdit(); // Reset form and state
+    
+    // Visual feedback
     statusLine.style.color = "var(--accent)";
     setTimeout(() => statusLine.style.color = "", 1500);
     
   } catch (error) {
     console.error(error);
-    statusLine.textContent = "Failed to add herb details.";
+    statusLine.textContent = editId ? "Failed to update herb." : "Failed to add herb details.";
     statusLine.style.color = "#ff4d6d";
   }
 });
 
 entryList.addEventListener("click", async (event) => {
-  if (!adminAuthorized) {
-    statusLine.textContent = "Admin authorization required.";
+  if (!adminAuthorized) return;
+
+  const target = event.target;
+  
+  // Handle Edit Click
+  if (target.matches(".edit-btn")) {
+    const id = target.getAttribute("data-id");
+    if (id) startEdit(id);
     return;
   }
 
-  const target = event.target;
-  if (!(target instanceof HTMLElement) || !target.matches(".danger-btn")) return;
-
-  const id = target.getAttribute("data-id");
-  if (!id) return;
-  
-  // Add visual confirmation before delete
-  if (!confirm("Are you sure you want to delete this herb?")) return;
-
-  try {
-    // Animation for removal
-    const item = target.closest('.entry-item');
-    item.style.transform = "translateX(20px)";
-    item.style.opacity = "0";
+  // Handle Delete Click
+  if (target.matches(".danger-btn")) {
+    const id = target.getAttribute("data-id");
+    if (!id) return;
     
-    setTimeout(async () => {
-      await deleteDoc(doc(db, "herbs", id));
-      statusLine.textContent = "Herb deleted.";
-    }, 300);
-    
-  } catch (error) {
-    console.error(error);
-    statusLine.textContent = "Failed to delete herb.";
+    if (!confirm("Are you sure you want to delete this herb?")) return;
+
+    try {
+      const item = target.closest('.entry-item');
+      item.style.transform = "translateX(20px)";
+      item.style.opacity = "0";
+      
+      setTimeout(async () => {
+        await deleteDoc(doc(db, "herbs", id));
+        statusLine.textContent = "Herb deleted.";
+        // If we were editing this item, cancel edit mode
+        if (editIdInput.value === id) cancelEdit();
+      }, 300);
+      
+    } catch (error) {
+      console.error(error);
+      statusLine.textContent = "Failed to delete herb.";
+    }
   }
 });
 
+// Cancel Button Listener
+if (cancelEditBtn) cancelEditBtn.addEventListener("click", cancelEdit);
+
+// CSV Listeners
 if (uploadCsvBtn) uploadCsvBtn.addEventListener("click", uploadCsv);
 if (downloadTemplateBtn) downloadTemplateBtn.addEventListener("click", downloadTemplate);
