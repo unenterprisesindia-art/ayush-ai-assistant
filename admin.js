@@ -54,8 +54,13 @@ function isAuthorizedAdmin(user) {
 }
 
 function setAdminVisibility(isVisible) {
-  adminContent.hidden = !isVisible;
-  signOutBtn.hidden = !isVisible;
+  if (isVisible) {
+    adminContent.classList.add("show");
+    signOutBtn.hidden = false;
+  } else {
+    adminContent.classList.remove("show");
+    signOutBtn.hidden = true;
+  }
 }
 
 function escapeHtml(value) {
@@ -115,12 +120,12 @@ function toArray(text) {
 
 function renderEntries(items) {
   if (!items.length) {
-    entryList.innerHTML = "<p>No herbs added yet.</p>";
+    entryList.innerHTML = "<p style='opacity:0.7; text-align:center;'>No herbs added yet.</p>";
     return;
   }
 
-  entryList.innerHTML = items.map((item) => `
-    <article class="entry-item">
+  entryList.innerHTML = items.map((item, index) => `
+    <article class="entry-item" style="animation-delay: ${index * 0.05}s">
       <div>
         <h3>${escapeHtml(item.name)}</h3>
         <p><strong>Category:</strong> ${escapeHtml(item.category)}</p>
@@ -158,9 +163,12 @@ function startHerbListener() {
     const entries = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
     renderEntries(entries);
     statusLine.textContent = "Connected to Firestore.";
+    statusLine.style.opacity = 0.9;
   }, (error) => {
     console.error(error);
     statusLine.textContent = "Firestore connection failed. Check rules/config.";
+    statusLine.style.opacity = 1;
+    statusLine.style.color = "#ff4d6d";
   });
 }
 
@@ -178,6 +186,7 @@ async function uploadCsv() {
 
   try {
     uploadCsvBtn.disabled = true;
+    uploadCsvBtn.textContent = "Uploading...";
     statusLine.textContent = "Reading CSV file...";
 
     const text = await file.text();
@@ -235,6 +244,7 @@ async function uploadCsv() {
     statusLine.textContent = "Failed to upload CSV data.";
   } finally {
     uploadCsvBtn.disabled = false;
+    uploadCsvBtn.textContent = "Upload CSV";
   }
 }
 
@@ -264,7 +274,8 @@ authForm.addEventListener("submit", async (event) => {
     passwordInput.value = "";
   } catch (error) {
     console.error(error);
-    authMessage.textContent = "Sign in failed. Check Firebase email/password.";
+    authMessage.textContent = "Sign in failed. Check credentials.";
+    authMessage.style.color = "#ff4d6d";
   }
 });
 
@@ -279,7 +290,8 @@ signOutBtn.addEventListener("click", async () => {
 
 onAuthStateChanged(auth, async (user) => {
   adminAuthorized = isAuthorizedAdmin(user);
-
+  authMessage.style.color = ""; // Reset color
+  
   if (!user) {
     setAdminVisibility(false);
     stopHerbListener();
@@ -334,9 +346,15 @@ herbForm.addEventListener("submit", async (event) => {
     await addDoc(herbsCollection, payload);
     herbForm.reset();
     statusLine.textContent = "Herb details added to Firestore.";
+    
+    // Visual feedback flash
+    statusLine.style.color = "var(--accent)";
+    setTimeout(() => statusLine.style.color = "", 1500);
+    
   } catch (error) {
     console.error(error);
     statusLine.textContent = "Failed to add herb details.";
+    statusLine.style.color = "#ff4d6d";
   }
 });
 
@@ -351,10 +369,21 @@ entryList.addEventListener("click", async (event) => {
 
   const id = target.getAttribute("data-id");
   if (!id) return;
+  
+  // Add visual confirmation before delete
+  if (!confirm("Are you sure you want to delete this herb?")) return;
 
   try {
-    await deleteDoc(doc(db, "herbs", id));
-    statusLine.textContent = "Herb deleted.";
+    // Animation for removal
+    const item = target.closest('.entry-item');
+    item.style.transform = "translateX(20px)";
+    item.style.opacity = "0";
+    
+    setTimeout(async () => {
+      await deleteDoc(doc(db, "herbs", id));
+      statusLine.textContent = "Herb deleted.";
+    }, 300);
+    
   } catch (error) {
     console.error(error);
     statusLine.textContent = "Failed to delete herb.";
