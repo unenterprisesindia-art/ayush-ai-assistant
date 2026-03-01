@@ -6,6 +6,7 @@
   <title>AYUSH Herbal Encyclopedia</title>
   <link rel="stylesheet" href="theme.css" />
   <style>
+    /* Page Layout Styles */
     * { box-sizing: border-box; }
     nav {
       display: flex;
@@ -27,8 +28,9 @@
       padding: 0;
       flex-wrap: wrap;
     }
-    nav a { color: var(--text-color); text-decoration: none; font-weight: 500; }
-    nav a.active { color: var(--accent); }
+    nav a { color: var(--text-color); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+    nav a:hover, nav a.active { color: var(--accent); }
+    
     .page { width: min(1100px, 92%); margin: 24px auto 40px; }
     .header-row {
       display: flex;
@@ -39,6 +41,7 @@
       margin-bottom: 14px;
     }
     h1 { margin: 0; }
+    
     .filters {
       display: grid;
       grid-template-columns: 1fr 220px;
@@ -55,18 +58,23 @@
       color: #111;
     }
     .results-count { opacity: 0.85; margin-bottom: 14px; }
+    
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 14px;
     }
+    
     .card {
-      background: var(--card-bg);
+      background: var(--surface-strong);
       border-radius: 16px;
       padding: 16px;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid var(--border);
       backdrop-filter: blur(12px);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+    
     .card h3 { margin: 0; color: var(--accent); }
     .card .category {
       display: inline-block;
@@ -74,8 +82,9 @@
       font-size: 0.9rem;
       opacity: 0.9;
     }
-    .card p { margin: 10px 0; line-height: 1.45; }
-    .label { font-weight: 600; }
+    .card p { margin: 10px 0; line-height: 1.45; color: var(--text-muted); }
+    .label { font-weight: 600; color: var(--text-color); }
+    
     .chips {
       display: flex;
       gap: 6px;
@@ -84,11 +93,118 @@
     }
     .chip {
       font-size: 0.82rem;
-      background: rgba(255,255,255,0.15);
+      background: rgba(103, 242, 196, 0.15);
+      color: var(--accent);
       border-radius: 999px;
       padding: 4px 10px;
     }
     .empty { text-align: center; opacity: 0.9; margin-top: 30px; }
+
+    /* --- LOADER ANIMATION STYLES --- */
+    .loader-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, var(--bg-secondary), var(--bg-primary));
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    .loader-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    /* Animated Leaf Container */
+    .leaf-loader {
+      width: 80px;
+      height: 80px;
+      position: relative;
+    }
+
+    .leaf-spinner {
+      width: 100%;
+      height: 100%;
+      border: 3px solid transparent;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      position: absolute;
+      top: 0; left: 0;
+    }
+
+    .leaf-spinner:nth-child(2) {
+      width: 65%;
+      height: 65%;
+      top: 17.5%; left: 17.5%;
+      border-top-color: var(--accent-strong);
+      animation-delay: -0.4s;
+    }
+
+    .leaf-spinner:nth-child(3) {
+      width: 30%;
+      height: 30%;
+      top: 35%; left: 35%;
+      border-top-color: #fff;
+      animation-delay: -0.8s;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Text Loading Animation */
+    .loader-text {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* Bottom Loading Bar */
+    .loader-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      overflow: hidden;
+    }
+
+    .loader-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -50%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: loadingBar 1.5s infinite;
+    }
+
+    @keyframes loadingBar {
+      0% { left: -50%; }
+      100% { left: 100%; }
+    }
+
     @media (max-width: 700px) {
       nav { padding: 14px 4%; }
       .filters { grid-template-columns: 1fr; }
@@ -96,10 +212,23 @@
   </style>
 </head>
 <body>
-  <button id="themeToggle">🌙</button>
+  <!-- Loader Overlay -->
+  <div id="loader" class="loader-overlay">
+    <div class="loader-content">
+      <div class="leaf-loader">
+        <div class="leaf-spinner"></div>
+        <div class="leaf-spinner"></div>
+        <div class="leaf-spinner"></div>
+      </div>
+      <div class="loader-text">Cultivating herbal wisdom...</div>
+    </div>
+    <div class="loader-bar"></div>
+  </div>
+
+  <button id="themeToggle" aria-label="Toggle theme"></button>
 
   <nav>
-    <h2>🌿 AYUSH AI</h2>
+    <h2>AYUSH AI</h2>
     <ul>
       <li><a href="index.html">Home</a></li>
       <li><a href="herbs.html" class="active">Herbs</a></li>
@@ -110,7 +239,7 @@
   <main class="page">
     <div class="header-row">
       <h1>Herbal Encyclopedia</h1>
-      <span id="totalCount">Loading herbs from Firestore...</span>
+      <span id="totalCount"></span>
     </div>
 
     <div class="filters">
