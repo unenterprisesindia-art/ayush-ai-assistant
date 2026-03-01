@@ -1,10 +1,4 @@
-import { db } from "./firebase-init.js";
-import {
-  collection,
-  onSnapshot,
-  orderBy,
-  query
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+// herbs.js
 
 const herbGrid = document.getElementById("herbGrid");
 const searchInput = document.getElementById("searchInput");
@@ -12,12 +6,10 @@ const categoryFilter = document.getElementById("categoryFilter");
 const resultsCount = document.getElementById("resultsCount");
 const emptyState = document.getElementById("emptyState");
 const totalCount = document.getElementById("totalCount");
-
-// Loader Element
 const loader = document.getElementById("loader");
-let isInitialLoad = true;
 
 let herbalEncyclopedia = [];
+let isInitialLoad = true;
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -100,41 +92,39 @@ function filterHerbs() {
   render(filtered);
 }
 
-function loadHerbsRealtime() {
-  // Text is now handled by the HTML loader, so we can remove the "Loading..." text here
-  const herbsQuery = query(collection(db, "herbs"), orderBy("createdAt", "desc"));
+// --- NEW DATABASE CONNECTION LOGIC ---
+async function loadHerbsFromDatabase() {
+  totalCount.textContent = "Loading from local database...";
   
-  onSnapshot(herbsQuery, (snapshot) => {
-    herbalEncyclopedia = snapshot.docs.map((item) => ({
-      id: item.id,
-      ...item.data()
-    }));
+  try {
+    // Fetch data from your local Node.js server
+    const response = await fetch('http://localhost:3000/api/herbs');
+    
+    if (!response.ok) {
+      throw new Error("Failed to connect to database");
+    }
 
+    herbalEncyclopedia = await response.json();
+    
     totalCount.textContent = `${herbalEncyclopedia.length} AYUSH herbs`;
     populateCategories();
     filterHerbs();
 
-    // Hide loader after first successful data fetch
     if (isInitialLoad) {
       hideLoader();
       isInitialLoad = false;
     }
-  }, (error) => {
+
+  } catch (error) {
     console.error(error);
-    totalCount.textContent = "Could not load herbs";
-    resultsCount.textContent = "Firestore connection failed. Please check Firebase config and rules.";
-    herbGrid.innerHTML = "";
-    emptyState.hidden = false;
-    
-    // Ensure loader is hidden even on error
-    if (isInitialLoad) {
-      hideLoader();
-      isInitialLoad = false;
-    }
-  });
+    totalCount.textContent = "Error connecting to database";
+    resultsCount.textContent = "Could not load data. Is server.js running?";
+    hideLoader();
+  }
 }
 
 searchInput.addEventListener("input", filterHerbs);
 categoryFilter.addEventListener("change", filterHerbs);
 
-loadHerbsRealtime();
+// Load data when page opens
+loadHerbsFromDatabase();
