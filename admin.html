@@ -37,7 +37,7 @@
 
     /* Main Container Animation */
     .admin-container {
-      max-width: 1100px; /* Slightly wider for images */
+      max-width: 1100px;
       margin: 26px auto 60px;
       background: var(--surface-strong);
       border: 1px solid var(--border);
@@ -74,7 +74,6 @@
       display: grid;
       gap: 10px;
       border: 1px solid var(--border);
-      transition: transform 0.3s ease, opacity 0.3s ease;
     }
     
     .auth-card h2 { margin: 0; font-size: 1.1rem; }
@@ -116,6 +115,27 @@
     button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px var(--accent-glow); }
     button:active { transform: translateY(0); }
 
+    /* Edit Mode Button Styles */
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      grid-column: 1 / -1;
+    }
+    
+    .btn-group button {
+      flex: 1;
+    }
+
+    .cancel-btn {
+      background: rgba(255, 255, 255, 0.1) !important;
+      color: var(--text-color) !important;
+      border: 1px solid var(--border) !important;
+    }
+    .cancel-btn:hover {
+      background: rgba(255, 255, 255, 0.2) !important;
+      border-color: #fff !important;
+    }
+
     .entry-form textarea { resize: vertical; min-height: 48px; }
     .entry-form .full-width { grid-column: 1 / -1; }
 
@@ -151,15 +171,14 @@
     .entry-item {
       background: rgba(255,255,255,0.03);
       border-radius: 16px;
-      padding: 0; /* Remove padding for flush image */
       display: grid;
-      grid-template-columns: 100px 1fr auto; /* Image | Content | Button */
+      grid-template-columns: 100px 1fr auto;
       gap: 0;
       border: 1px solid var(--border);
       opacity: 0;
       transform: translateX(-20px);
       animation: slideInItem 0.4s ease forwards;
-      overflow: hidden; /* Keep image inside border radius */
+      overflow: hidden;
       transition: border-color 0.3s ease, background 0.3s ease;
     }
     
@@ -172,7 +191,6 @@
       to { opacity: 1; transform: translateX(0); }
     }
 
-    /* The Image Thumbnail */
     .entry-thumb {
       width: 100px;
       height: 100%;
@@ -214,21 +232,46 @@
       opacity: 1;
     }
 
-    .danger-btn {
-      align-self: center;
-      margin-right: 16px;
+    /* Action Buttons Column */
+    .action-group {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .edit-btn {
       border: none;
-      border-radius: 10px;
-      padding: 8px 16px;
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: rgba(103, 242, 196, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(103, 242, 196, 0.2);
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+    }
+    .edit-btn:hover { 
+      background: var(--accent); 
+      color: #04261f; 
+      transform: scale(1.02); 
+    }
+
+    .danger-btn {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
       background: rgba(255, 77, 109, 0.1);
       color: #ff4d6d;
       border: 1px solid rgba(255, 77, 109, 0.2);
       cursor: pointer;
       font-weight: 700;
       transition: all 0.2s ease;
-      height: fit-content;
+      font-size: 0.85rem;
     }
-    .danger-btn:hover { background: #ff4d6d; color: #fff; transform: scale(1.05); }
+    .danger-btn:hover { background: #ff4d6d; color: #fff; transform: scale(1.02); }
 
     /* Content Reveal Transition */
     #adminContent {
@@ -247,10 +290,11 @@
 
     @media (max-width: 700px) {
       .entry-form, .auth-form { grid-template-columns: 1fr; }
-      .entry-form .full-width { grid-column: auto; }
+      .entry-form .full-width, .btn-group { grid-column: auto; }
       .entry-item { grid-template-columns: 1fr; }
       .entry-thumb { width: 100%; height: 150px; border-right: none; border-bottom: 1px solid var(--border); }
-      .danger-btn { margin: 0 0 16px 0; width: calc(100% - 32px); align-self: auto; }
+      .action-group { flex-direction: row; padding: 0 16px 16px; }
+      .edit-btn, .danger-btn { width: 100%; }
     }
   </style>
 </head>
@@ -299,7 +343,14 @@
         <input id="imageUrlInput" type="url" placeholder="Image address (optional)">
         <input id="dosageInput" type="text" placeholder="Dosage guidance" class="full-width" required>
         <textarea id="precautionsInput" placeholder="Precautions (comma separated)" class="full-width" required></textarea>
-        <button type="submit" class="full-width">Add Herb Details</button>
+        
+        <!-- Hidden input to store ID during edit -->
+        <input type="hidden" id="editIdInput">
+
+        <div class="btn-group">
+          <button type="submit" id="submitBtn">Add Herb Details</button>
+          <button type="button" id="cancelEditBtn" class="cancel-btn" hidden>Cancel Edit</button>
+        </div>
       </form>
 
       <section class="bulk-upload">
