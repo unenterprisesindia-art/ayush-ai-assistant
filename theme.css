@@ -5,11 +5,15 @@
   --surface-strong: rgba(8, 22, 34, 0.9);
   --card-bg: rgba(255, 255, 255, 0.1);
   --text-color: #f3fbff;
+  --text: #f3fbff; /* Alias for consistency */
   --text-muted: rgba(243, 251, 255, 0.78);
   --accent: #67f2c4;
   --accent-strong: #11d39b;
+  --accent-glow: rgba(103, 242, 196, 0.4);
   --border: rgba(255, 255, 255, 0.2);
   --shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+  --soft-shadow: 0 10px 30px rgba(10, 16, 30, 0.14);
+  --hero-gradient: linear-gradient(135deg, rgba(103, 242, 196, 0.22), rgba(92, 131, 255, 0.14));
 }
 
 body.light {
@@ -19,11 +23,15 @@ body.light {
   --surface-strong: rgba(255, 255, 255, 0.95);
   --card-bg: rgba(255, 255, 255, 0.8);
   --text-color: #0f2230;
+  --text: #0f2230;
   --text-muted: rgba(15, 34, 48, 0.72);
   --accent: #0179ff;
   --accent-strong: #005dd4;
+  --accent-glow: rgba(1, 121, 255, 0.4);
   --border: rgba(9, 46, 76, 0.16);
   --shadow: 0 18px 40px rgba(0, 67, 128, 0.16);
+  --soft-shadow: 0 10px 30px rgba(10, 16, 30, 0.08);
+  --hero-gradient: linear-gradient(135deg, rgba(1, 121, 255, 0.1), rgba(103, 242, 196, 0.1));
 }
 
 * { box-sizing: border-box; }
@@ -35,8 +43,9 @@ body {
               linear-gradient(140deg, var(--bg-primary), var(--bg-secondary));
   color: var(--text-color);
   line-height: 1.55;
-  transition: background 0.35s ease, color 0.3s ease;
+  transition: background 0.45s ease, color 0.35s ease;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 a { color: inherit; }
@@ -90,6 +99,7 @@ a { color: inherit; }
 .page-shell {
   width: min(1100px, 92%);
   margin: 24px auto 60px;
+  position: relative;
 }
 
 .glass {
@@ -112,6 +122,14 @@ a { color: inherit; }
   cursor: pointer;
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #04131d;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--accent-glow);
 }
 
 .btn.secondary {
@@ -120,10 +138,15 @@ a { color: inherit; }
   border: 1px solid var(--border);
 }
 
+.btn.secondary:hover {
+  border-color: var(--accent);
+  background: rgba(255,255,255,0.05);
+}
+
 #themeToggle {
   position: fixed;
-  right: 16px;
-  bottom: 16px;
+  right: 20px;
+  bottom: 20px;
   width: 46px;
   height: 46px;
   border-radius: 50%;
@@ -134,6 +157,11 @@ a { color: inherit; }
   color: var(--text-color);
   box-shadow: var(--shadow);
   z-index: 60;
+  transition: transform 0.3s ease;
+}
+
+#themeToggle:hover {
+  transform: rotate(20deg) scale(1.1);
 }
 
 input, select, textarea {
