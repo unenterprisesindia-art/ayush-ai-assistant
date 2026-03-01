@@ -6,6 +6,36 @@
   <title>AYUSH Herbs Admin Panel</title>
   <link rel="stylesheet" href="theme.css">
   <style>
+    /* Ambient Background */
+    .bg-gradient {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      background: radial-gradient(circle at 10% 20%, rgba(103, 242, 196, 0.1), transparent 40%),
+                  radial-gradient(circle at 90% 80%, rgba(109, 137, 255, 0.08), transparent 40%);
+      animation: bgPulse 15s ease-in-out infinite alternate;
+    }
+    @keyframes bgPulse { 0% { opacity: 1; } 100% { opacity: 0.6; } }
+
+    .blob {
+      position: fixed;
+      border-radius: 999px;
+      filter: blur(70px);
+      opacity: 0.3;
+      z-index: -1;
+      animation: blobMove 20s infinite alternate;
+    }
+    .blob.one { width: 400px; height: 400px; top: -100px; right: -100px; background: rgba(103, 242, 196, 0.2); }
+    .blob.two { width: 300px; height: 300px; bottom: -50px; left: -50px; background: rgba(109, 137, 255, 0.2); animation-delay: -5s; }
+
+    @keyframes blobMove {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(20px, 30px) scale(1.1); }
+    }
+
+    /* Main Container Animation */
     .admin-container {
       max-width: 980px;
       margin: 26px auto 60px;
@@ -15,7 +45,16 @@
       padding: 24px;
       box-shadow: var(--shadow);
       backdrop-filter: blur(15px);
+      opacity: 0;
+      transform: translateY(30px);
+      animation: containerIn 0.8s ease forwards;
+      animation-delay: 0.2s;
     }
+
+    @keyframes containerIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .admin-header {
       display: flex;
       justify-content: space-between;
@@ -25,17 +64,29 @@
       flex-wrap: wrap;
     }
     .admin-title { color: var(--accent); margin: 0; }
+
+    /* Cards & Sections */
     .auth-card {
       padding: 16px;
       border-radius: 14px;
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.05);
       margin-bottom: 16px;
       display: grid;
       gap: 10px;
       border: 1px solid var(--border);
+      transition: transform 0.3s ease, opacity 0.3s ease;
     }
+    
     .auth-card h2 { margin: 0; font-size: 1.1rem; }
-    .auth-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
+    /* Form Styles */
+    .auth-form, .entry-form {
+      display: grid;
+      gap: 10px;
+    }
+    .auth-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .entry-form { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 16px; }
+
     .auth-form input, .auth-form button, .signout-btn,
     .entry-form input, .entry-form textarea, .entry-form button,
     .bulk-upload input, .bulk-upload button {
@@ -43,62 +94,130 @@
       border-radius: 10px;
       padding: 10px 12px;
       font-family: inherit;
+      background: rgba(255,255,255,0.9);
+      color: #111;
+      transition: box-shadow 0.3s ease, transform 0.2s ease;
     }
+
+    input:focus, textarea:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
     .auth-form button, .signout-btn, .entry-form button, .bulk-upload button {
       background: linear-gradient(135deg, var(--accent), var(--accent-strong));
       color: #031319;
       font-weight: 700;
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
     }
-    .entry-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+    
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px var(--accent-glow); }
+    button:active { transform: translateY(0); }
+
     .entry-form textarea { resize: vertical; min-height: 48px; }
     .entry-form .full-width { grid-column: 1 / -1; }
-    .status-line { opacity: 0.9; margin-bottom: 10px; color: var(--text-muted); }
+
+    /* Status Line Animation */
+    .status-line {
+      opacity: 0; 
+      transform: translateY(5px);
+      margin-bottom: 10px;
+      color: var(--text-muted);
+      animation: fadeSlideIn 0.5s ease forwards;
+      animation-delay: 0.4s;
+    }
+
+    @keyframes fadeSlideIn {
+      to { opacity: 0.9; transform: translateY(0); }
+    }
+
     .bulk-upload {
       margin: 8px 0 20px;
       padding: 14px;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border);
     }
-    .bulk-upload p { margin: 0 0 8px; line-height: 1.4; }
+    .bulk-upload p { margin: 0 0 8px; line-height: 1.4; font-size: 0.9rem; }
     .bulk-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+    /* List Animations */
     .entry-list { display: grid; gap: 12px; }
+
     .entry-item {
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.05);
       border-radius: 14px;
       padding: 14px;
       display: flex;
       justify-content: space-between;
       gap: 16px;
       border: 1px solid var(--border);
+      opacity: 0;
+      transform: translateX(-20px);
+      animation: slideInItem 0.4s ease forwards;
     }
+    
+    .entry-item:hover {
+      border-color: var(--accent);
+      background: rgba(255,255,255,0.08);
+    }
+
+    @keyframes slideInItem {
+      to { opacity: 1; transform: translateX(0); }
+    }
+
     .entry-item > div { flex: 1; min-width: 0; }
     .entry-item h3 { margin: 0 0 6px; color: var(--accent); }
-    .entry-item p { margin: 4px 0; opacity: 0.9; overflow-wrap: anywhere; }
-    .entry-item a {
-      overflow-wrap: anywhere;
-      word-break: break-word;
-    }
+    .entry-item p { margin: 4px 0; opacity: 0.85; font-size: 0.9rem; overflow-wrap: anywhere; }
+    
     .danger-btn {
       align-self: flex-start;
       border: none;
       border-radius: 10px;
       padding: 8px 12px;
-      background: #ff4d6d;
-      color: #fff;
+      background: rgba(255, 77, 109, 0.2);
+      color: #ff4d6d;
+      border: 1px solid rgba(255, 77, 109, 0.3);
       cursor: pointer;
       font-weight: 700;
+      transition: all 0.2s ease;
     }
-    #adminContent[hidden] { display: none; }
-    @media (max-width: 700px) { .entry-form, .auth-form { grid-template-columns: 1fr; } .entry-form .full-width { grid-column: auto; } .entry-item { flex-direction: column; } .danger-btn { width: 100%; } }
+    .danger-btn:hover { background: #ff4d6d; color: #fff; transform: scale(1.05); }
+
+    /* Content Reveal Transition */
+    #adminContent {
+      display: block;
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    
+    #adminContent.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    @media (max-width: 700px) {
+      .entry-form, .auth-form { grid-template-columns: 1fr; }
+      .entry-form .full-width { grid-column: auto; }
+      .entry-item { flex-direction: column; }
+      .danger-btn { width: 100%; }
+    }
   </style>
 </head>
 <body>
-  <button id="themeToggle">🌙</button>
+  <div class="bg-gradient"></div>
+  <span class="blob one"></span>
+  <span class="blob two"></span>
+
+  <button id="themeToggle" aria-label="Toggle theme"></button>
 
   <nav class="site-nav">
-    <h2 class="brand">🌿 AYUSH AI</h2>
+    <h2 class="brand">AYUSH AI</h2>
     <ul class="nav-list">
       <li><a href="index.html">Home</a></li>
       <li><a href="herbs.html">Herbs</a></li>
@@ -108,7 +227,7 @@
 
   <div class="admin-container">
     <div class="admin-header">
-      <h1 class="admin-title">🛠️ AYUSH Herbs Admin Panel</h1>
+      <h1 class="admin-title">AYUSH Herbs Admin Panel</h1>
       <a href="herbs.html" class="btn">View Herbs Page</a>
     </div>
 
@@ -120,12 +239,12 @@
         <button type="submit">Sign In</button>
       </form>
       <button id="signOutBtn" class="signout-btn" type="button" hidden>Sign Out</button>
-      <p id="authMessage" class="status-line">Sign in with Firebase email/password.</p>
+      <p id="authMessage" class="status-line" style="animation:none; opacity:0.9;">Sign in with Firebase email/password.</p>
     </section>
 
     <p class="status-line" id="status">Sign in to connect to Firestore.</p>
 
-    <section id="adminContent" hidden>
+    <section id="adminContent">
       <form class="entry-form" id="herbForm">
         <input id="nameInput" type="text" placeholder="Herb name" required>
         <input id="categoryInput" type="text" placeholder="Category" required>
@@ -140,7 +259,7 @@
 
       <section class="bulk-upload">
         <p><strong>Bulk CSV upload</strong> (exact headers): <code>name,category,benefits,used_for,forms,image_url,dosage,precautions</code></p>
-        <p>For list columns (<code>benefits</code>, <code>used_for</code>, <code>forms</code>, <code>precautions</code>) use <code>|</code> between values.</p>
+        <p>For list columns use <code>|</code> between values.</p>
         <div class="bulk-actions">
           <input id="csvInput" type="file" accept=".csv,text/csv">
           <button id="uploadCsvBtn" type="button">Upload CSV</button>
