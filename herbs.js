@@ -5,7 +5,7 @@ import {
   onSnapshot,
   orderBy,
   query
-} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const herbGrid = document.getElementById("herbGrid");
 const searchInput = document.getElementById("searchInput");
