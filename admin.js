@@ -1,4 +1,22 @@
 // admin.js
+import { auth, db } from "./firebase-init.js";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc,
+  writeBatch
+} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
 const statusLine = document.getElementById("status");
 const authMessage = document.getElementById("authMessage");
@@ -28,39 +46,37 @@ const csvInput = document.getElementById("csvInput");
 const uploadCsvBtn = document.getElementById("uploadCsvBtn");
 const downloadTemplateBtn = document.getElementById("downloadTemplateBtn");
 
-const API_URL = 'http://localhost:3000/api/herbs';
+const herbsCollection = collection(db, "herbs");
+const ADMIN_EMAILS = ["unenterprisesindia@gmail.com"];
+let unsubscribeHerbs = null;
+let adminAuthorized = false;
 let allHerbs = [];
 
-// --- UI Logic (No Auth required for local version) ---
-adminContent.classList.add("show");
-statusLine.textContent = "Connected to Local Database.";
+function isAuthorizedAdmin(user) {
+  const email = user?.email?.toLowerCase();
+  return Boolean(email && ADMIN_EMAILS.includes(email));
+}
+
+function setAdminVisibility(isVisible) {
+  if (isVisible) { adminContent.classList.add("show"); signOutBtn.hidden = false; }
+  else { adminContent.classList.remove("show"); signOutBtn.hidden = true; }
+}
 
 function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
-function toArray(text) {
-  return text.split(",").map(v => v.trim()).filter(Boolean);
-}
+function toArray(text) { return text.split(",").map(v => v.trim()).filter(Boolean); }
+function splitList(value = "") { return value.split("|").map(item => item.trim()).filter(Boolean); }
 
 function renderEntries(items) {
   allHerbs = items;
-  
-  if (!items.length) {
-    entryList.innerHTML = "<p style='opacity:0.7; text-align:center; padding:20px;'>No herbs added yet.</p>";
-    return;
-  }
+  if (!items.length) { entryList.innerHTML = "<p style='opacity:0.7; text-align:center; padding:20px;'>No herbs added yet.</p>"; return; }
 
   entryList.innerHTML = items.map((item, index) => {
     const imgHtml = item.image_url 
       ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}" class="entry-thumb" loading="lazy">`
       : `<div class="entry-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.8rem;">No Image</div>`;
-
     return `
       <article class="entry-item" style="animation-delay: ${index * 0.03}s">
         ${imgHtml}
@@ -74,27 +90,24 @@ function renderEntries(items) {
             <button class="edit-btn" data-id="${item.id}">Edit</button>
             <button class="danger-btn" data-id="${item.id}">Delete</button>
         </div>
-      </article>
-    `;
+      </article>`;
   }).join("");
 }
 
-async function loadHerbs() {
-  try {
-    const response = await fetch(API_URL);
-    const data = await response.json();
-    renderEntries(data);
-    statusLine.textContent = "Connected to Local Database.";
-  } catch (err) {
-    statusLine.textContent = "Error: Server not running?";
-    console.error(err);
-  }
+function startHerbListener() {
+  const herbsQuery = query(herbsCollection, orderBy("createdAt", "desc"));
+  unsubscribeHerbs = onSnapshot(herbsQuery, (snapshot) => {
+    const entries = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+    renderEntries(entries);
+    statusLine.textContent = "Connected to Firestore.";
+  }, (error) => { console.error(error); statusLine.textContent = "Firestore connection failed."; });
 }
 
-function startEdit(id) {
-  const herb = allHerbs.find(h => h.id == id); // SQLite ID is integer, match loosely
-  if (!herb) return;
+function stopHerbListener() { if (unsubscribeHerbs) unsubscribeHerbs(); }
 
+function startEdit(id) {
+  const herb = allHerbs.find(h => h.id === id);
+  if (!herb) return;
   nameInput.value = herb.name || "";
   categoryInput.value = herb.category || "";
   benefitsInput.value = (herb.benefits || []).join(", ");
@@ -103,7 +116,6 @@ function startEdit(id) {
   imageUrlInput.value = herb.image_url || "";
   dosageInput.value = herb.dosage || "";
   precautionsInput.value = (herb.precautions || []).join(", ");
-  
   editIdInput.value = id;
   submitBtn.textContent = "Update Herb";
   cancelEditBtn.hidden = false;
@@ -111,79 +123,93 @@ function startEdit(id) {
 }
 
 function cancelEdit() {
-  herbForm.reset();
-  editIdInput.value = "";
-  submitBtn.textContent = "Add Herb Details";
-  cancelEditBtn.hidden = true;
+  herbForm.reset(); editIdInput.value = ""; submitBtn.textContent = "Add Herb Details"; cancelEditBtn.hidden = true;
 }
 
-// --- FORM SUBMIT (ADD / UPDATE) ---
-herbForm.addEventListener("submit", async (event) => {
+authForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-
-  const payload = {
-    name: nameInput.value.trim(),
-    category: categoryInput.value.trim(),
-    benefits: toArray(benefitsInput.value),
-    used_for: toArray(usedForInput.value),
-    forms: toArray(formsInput.value),
-    image_url: imageUrlInput.value.trim(),
-    dosage: dosageInput.value.trim(),
-    precautions: toArray(precautionsInput.value),
-  };
-
-  const editId = editIdInput.value;
-  const method = editId ? 'PUT' : 'POST';
-  const url = editId ? `${API_URL}/${editId}` : API_URL;
-
   try {
-    const response = await fetch(url, {
-      method: method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (response.ok) {
-      statusLine.textContent = editId ? "Herb Updated!" : "Herb Added!";
-      cancelEdit();
-      loadHerbs();
-    } else {
-      throw new Error("Server error");
-    }
-  } catch (err) {
-    statusLine.textContent = "Failed to save data.";
-    console.error(err);
+    authMessage.textContent = "Signing in...";
+    await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+    passwordInput.value = "";
+  } catch (error) {
+    console.error(error);
+    authMessage.textContent = "Sign in failed.";
   }
 });
 
-// --- DELETE & EDIT BUTTONS ---
+signOutBtn.addEventListener("click", async () => { await signOut(auth); });
+
+onAuthStateChanged(auth, async (user) => {
+  adminAuthorized = isAuthorizedAdmin(user);
+  if (!user) { setAdminVisibility(false); stopHerbListener(); entryList.innerHTML = ""; statusLine.textContent = "Sign in to connect."; return; }
+  if (!adminAuthorized) { setAdminVisibility(false); stopHerbListener(); entryList.innerHTML = ""; statusLine.textContent = "Access denied."; await signOut(auth); return; }
+  setAdminVisibility(true);
+  authMessage.textContent = `Signed in as ${user.email}`;
+  statusLine.textContent = "Connecting to Firestore...";
+  startHerbListener();
+});
+
+herbForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!adminAuthorized) return;
+  const payload = {
+    name: nameInput.value.trim(), category: categoryInput.value.trim(),
+    benefits: toArray(benefitsInput.value), used_for: toArray(usedForInput.value),
+    forms: toArray(formsInput.value), image_url: imageUrlInput.value.trim(),
+    dosage: dosageInput.value.trim(), precautions: toArray(precautionsInput.value),
+  };
+  const editId = editIdInput.value;
+  try {
+    if (editId) {
+      await updateDoc(doc(db, "herbs", editId), payload);
+      statusLine.textContent = "Herb Updated!";
+    } else {
+      payload.createdAt = serverTimestamp();
+      await addDoc(herbsCollection, payload);
+      statusLine.textContent = "Herb Added!";
+    }
+    cancelEdit();
+  } catch (error) { console.error(error); statusLine.textContent = "Failed to save."; }
+});
+
 entryList.addEventListener("click", async (event) => {
+  if (!adminAuthorized) return;
   const target = event.target;
   const id = target.getAttribute("data-id");
-
-  if (target.matches(".edit-btn")) {
-    startEdit(id);
-  } else if (target.matches(".danger-btn")) {
+  if (target.matches(".edit-btn")) { startEdit(id); }
+  else if (target.matches(".danger-btn")) {
     if (!confirm("Delete this herb?")) return;
-    
-    try {
-        const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        if(response.ok) {
-            target.closest('.entry-item').style.opacity = 0;
-            loadHerbs();
-        }
-    } catch (err) {
-        console.error(err);
-    }
+    try { await deleteDoc(doc(db, "herbs", id)); statusLine.textContent = "Herb Deleted."; } catch (err) { console.error(err); }
   }
 });
 
 if (cancelEditBtn) cancelEditBtn.addEventListener("click", cancelEdit);
 
-// --- CSV UPLOAD (Simulated for now, requires multipart parsing on server) ---
-// Note: Multipart handling on Node requires 'multer' library. 
-// For now, this button will just log a message. 
-uploadCsvBtn.addEventListener('click', () => alert('CSV upload requires additional server setup. Use manual entry for now.'));
+uploadCsvBtn.addEventListener("click", async () => {
+    if (!adminAuthorized) return;
+    const file = csvInput?.files?.[0]; if (!file) return;
+    const text = await file.text();
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    const batch = writeBatch(db);
+    let count = 0;
+    lines.forEach((line, i) => {
+        if(i === 0) return;
+        const cols = line.split(",");
+        if(cols.length > 1) {
+            const ref = doc(herbsCollection);
+            batch.set(ref, { name: cols[0], category: cols[1], benefits: splitList(cols[2] || ""), used_for: splitList(cols[3] || ""), forms: splitList(cols[4] || ""), image_url: cols[5] || "", dosage: cols[6] || "", precautions: splitList(cols[7] || ""), createdAt: serverTimestamp() });
+            count++;
+        }
+    });
+    await batch.commit();
+    alert(`Uploaded ${count} herbs.`);
+    csvInput.value = "";
+});
 
-// Initial Load
-loadHerbs();
+downloadTemplateBtn.addEventListener("click", () => {
+    const h = ["name","category","benefits","used_for","forms","image_url","dosage","precautions"];
+    const row = ['Test,Ayurveda,"Benefit 1|Benefit 2","Use 1","Form 1",,1 tsp,"Prec 1"'];
+    const blob = new Blob([h.join(",")+"\n"+row.join("\n")], {type: "text/csv"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "template.csv"; a.click();
+});
