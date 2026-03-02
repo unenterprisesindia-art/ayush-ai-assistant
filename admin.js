@@ -4,7 +4,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut
-} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import {
   addDoc,
   collection,
@@ -16,7 +16,7 @@ import {
   serverTimestamp,
   updateDoc,
   writeBatch
-} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const statusLine = document.getElementById("status");
 const authMessage = document.getElementById("authMessage");
