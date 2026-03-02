@@ -1,4 +1,11 @@
 // herbs.js
+import { db } from "./firebase-init.js";
+import {
+  collection,
+  onSnapshot,
+  orderBy,
+  query
+} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
 const herbGrid = document.getElementById("herbGrid");
 const searchInput = document.getElementById("searchInput");
@@ -50,13 +57,7 @@ function render(herbs) {
 
 function populateCategories() {
   categoryFilter.innerHTML = '<option value="">All categories</option>';
-
-  const categories = [...new Set(
-    herbalEncyclopedia
-      .map((herb) => herb.category)
-      .filter(Boolean)
-  )].sort();
-
+  const categories = [...new Set(herbalEncyclopedia.map((herb) => herb.category).filter(Boolean))].sort();
   categories.forEach((category) => {
     const option = document.createElement("option");
     option.value = category;
@@ -71,60 +72,38 @@ function filterHerbs() {
 
   const filtered = herbalEncyclopedia.filter((herb) => {
     const haystack = [
-      herb.name,
-      herb.category,
-      ...asArray(herb.benefits),
-      ...asArray(herb.used_for),
-      ...asArray(herb.forms),
-      herb.dosage,
-      ...asArray(herb.precautions)
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+      herb.name, herb.category,
+      ...asArray(herb.benefits), ...asArray(herb.used_for), ...asArray(herb.forms),
+      herb.dosage, ...asArray(herb.precautions)
+    ].filter(Boolean).join(" ").toLowerCase();
 
     const matchesQuery = !userQuery || haystack.includes(userQuery);
     const matchesCategory = !selectedCategory || herb.category === selectedCategory;
-
     return matchesQuery && matchesCategory;
   });
 
   render(filtered);
 }
 
-// --- NEW DATABASE CONNECTION LOGIC ---
-async function loadHerbsFromDatabase() {
-  totalCount.textContent = "Loading from local database...";
+// --- FIREBASE REALTIME LISTENER ---
+function loadHerbsRealtime() {
+  if (isInitialLoad) totalCount.textContent = "Loading herbs from Firestore...";
   
-  try {
-    // Fetch data from your local Node.js server
-    const response = await fetch('http://localhost:3000/api/herbs');
-    
-    if (!response.ok) {
-      throw new Error("Failed to connect to database");
-    }
-
-    herbalEncyclopedia = await response.json();
-    
+  const herbsQuery = query(collection(db, "herbs"), orderBy("createdAt", "desc"));
+  
+  onSnapshot(herbsQuery, (snapshot) => {
+    herbalEncyclopedia = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
     totalCount.textContent = `${herbalEncyclopedia.length} AYUSH herbs`;
     populateCategories();
     filterHerbs();
-
-    if (isInitialLoad) {
-      hideLoader();
-      isInitialLoad = false;
-    }
-
-  } catch (error) {
+    if (isInitialLoad) { hideLoader(); isInitialLoad = false; }
+  }, (error) => {
     console.error(error);
-    totalCount.textContent = "Error connecting to database";
-    resultsCount.textContent = "Could not load data. Is server.js running?";
+    totalCount.textContent = "Error loading data";
     hideLoader();
-  }
+  });
 }
 
 searchInput.addEventListener("input", filterHerbs);
 categoryFilter.addEventListener("change", filterHerbs);
-
-// Load data when page opens
-loadHerbsFromDatabase();
+loadHerbsRealtime();
