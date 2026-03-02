@@ -1,22 +1,20 @@
-// admin.js
-import { auth, db } from "./firebase-init.js";
 import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import {
+  auth,
+  db,
   addDoc,
   collection,
   deleteDoc,
   doc,
+  onAuthStateChanged,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  signInWithEmailAndPassword,
+  signOut,
   updateDoc,
   writeBatch
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+} from "./firebase-init.js";
 
 const statusLine = document.getElementById("status");
 const authMessage = document.getElementById("authMessage");
