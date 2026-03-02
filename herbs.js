@@ -1,11 +1,11 @@
 // herbs.js
-import { db } from "./firebase-init.js";
 import {
+  db,
   collection,
   onSnapshot,
   orderBy,
   query
-} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+} from "./firebase-init.js";
 
 const herbGrid = document.getElementById("herbGrid");
 const searchInput = document.getElementById("searchInput");
