@@ -831,6 +831,24 @@
     <svg viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
   </div>
 
+  <!-- Chat Button -->
+  <button id="chat-btn" aria-label="Open herbal chat assistant">💬</button>
+
+  <!-- Chat Window -->
+  <div id="chat-window">
+    <div class="chat-header">
+      <span>🌿 AYUSH Herbal Assistant</span>
+      <span class="close-btn" onclick="toggleChat()">×</span>
+    </div>
+    <div id="chat-messages">
+      <div class="msg-bot">Hello! I am your herbal companion. Ask me about <strong>Brahmi</strong>, <strong>Immunity</strong>, or <strong>Turmeric</strong>.</div>
+    </div>
+    <div class="input-area">
+      <input type="text" id="user-input" placeholder="Ask about herbs...">
+      <button class="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
   <!-- Main Page Scripts -->
   <script>
     // Initialize particles
@@ -947,121 +965,82 @@
     });
   </script>
 
-  <!-- Watson Assistant Integration -->
+  <!-- AYUSH Chat Integration -->
   <script>
-    window.watsonAssistantChatOptions = {
-      integrationID: "8e32cc13-c4cb-4bdd-9363-9ba3445d6135",
-      region: "au-syd",
-      serviceInstanceID: "d0c42d9b-89f0-4285-99ea-d55452be84c4",
-      onLoad: async (instance) => {
-        // Custom CSS for Watson Chat to match AYUSH Dark Theme
-        const customCSS = `
-          /* --- MAIN CONTAINER --- */
-          .WatsonAssistantChatContainer {
-            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif !important;
-          }
-          
-          /* --- HEADER --- */
-          .WatsonAssistantChatHeader {
-            background: linear-gradient(135deg, #071622, #123247) !important;
-            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
-          }
-          .WatsonAssistantChatHeader .base--h1, 
-          .WatsonAssistantChatHeader .bx--header__header-name {
-            color: #67f2c4 !important;
-            font-weight: 700 !important;
-            letter-spacing: 0.02em !important;
-          }
+    const chatBtn = document.getElementById('chat-btn');
+    const chatWindow = document.getElementById('chat-window');
+    const messagesDiv = document.getElementById('chat-messages');
+    const userInput = document.getElementById('user-input');
+    const API_URL = 'https://herbal-backend-ylb7.onrender.com/chat';
 
-          /* --- MAIN CHAT AREA --- */
-          .WatsonAssistantChatBody {
-            background: radial-gradient(circle at 50% 0%, rgba(103, 242, 196, 0.05), transparent 60%),
-                        linear-gradient(180deg, #0a1e2e, #071622) !important;
-          }
+    function toggleChat() {
+      const isHidden = chatWindow.style.display === 'none' || chatWindow.style.display === '';
+      chatWindow.style.display = isHidden ? 'flex' : 'none';
+    }
+    chatBtn.onclick = toggleChat;
 
-          /* --- USER MESSAGES (Right side) --- */
-          .from-user .Message .Message__message-text {
-            background: linear-gradient(135deg, #67f2c4, #11d39b) !important;
-            color: #04261f !important;
-            border-radius: 18px 18px 4px 18px !important;
-            font-weight: 600 !important;
-            box-shadow: 0 4px 12px rgba(103, 242, 196, 0.2) !important;
-          }
+    function addMessage(text, sender) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = sender === 'user' ? 'msg-user' : 'msg-bot';
 
-          /* --- BOT MESSAGES (Left side) --- */
-          .from-watson .Message .Message__message-text {
-            background: rgba(255, 255, 255, 0.06) !important;
-            color: #f3fbff !important;
-            border: 1px solid rgba(255,255,255,0.12) !important;
-            border-radius: 18px 18px 18px 4px !important;
-            backdrop-filter: blur(8px) !important;
-          }
-
-          /* --- INPUT AREA --- */
-          .WatsonAssistantChatInput .bx--text-input {
-            background: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            color: #f3fbff !important;
-            border-radius: 24px !important;
-            padding-left: 20px !important;
-          }
-          .WatsonAssistantChatInput .bx--text-input::placeholder {
-            color: rgba(243, 251, 255, 0.5) !important;
-          }
-          .WatsonAssistantChatInput .bx--text-input:focus {
-            outline: none !important;
-            border-color: #67f2c4 !important;
-            box-shadow: 0 0 0 2px rgba(103, 242, 196, 0.2) !important;
-          }
-
-          /* --- BUTTONS & SUGGESTIONS --- */
-          .bx--btn--primary {
-            background: #67f2c4 !important;
-            color: #04261f !important;
-            font-weight: 700 !important;
-            border-radius: 999px !important;
-            border: none !important;
-            transition: transform 0.2s ease !important;
-          }
-          .bx--btn--primary:hover {
-            background: #11d39b !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 4px 10px rgba(103, 242, 196, 0.3) !important;
-          }
-          
-          /* --- LAUNCHER BUTTON (The small round button) --- */
-          .WatsonAssistantChatLauncher {
-            background: linear-gradient(135deg, #67f2c4, #11d39b) !important;
-            border-radius: 50% !important;
-            box-shadow: 0 6px 20px rgba(103, 242, 196, 0.4) !important;
-            transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-          }
-          .WatsonAssistantChatLauncher:hover {
-            transform: scale(1.1) rotate(10deg) !important;
-            box-shadow: 0 8px 25px rgba(103, 242, 196, 0.6) !important;
-          }
-          .WatsonAssistantChatLauncher svg {
-            fill: #04261f !important;
-          }
-        `;
-
-        // Inject CSS and Render
-        if (instance.updateCSS) {
-          instance.updateCSS(customCSS);
-        }
-        instance.render();
+      if (sender === 'bot') {
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/\n/g, '<br>');
+        text = text.replace(/(Name|Category|Benefits|Dosage|Precautions):/g, '<strong>$1:</strong>');
       }
-    };
 
-    setTimeout(() => {
-      const t = document.createElement("script");
-      t.src =
-        "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" +
-        (window.watsonAssistantChatOptions.clientVersion || "latest") +
-        "/WatsonAssistantChatEntry.js";
-      document.head.appendChild(t);
-    }, 2000);
+      msgDiv.innerHTML = text;
+      messagesDiv.appendChild(msgDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function showTyping() {
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'typing-indicator';
+      typingDiv.id = 'typing';
+      typingDiv.innerText = 'Bot is typing...';
+      messagesDiv.appendChild(typingDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function removeTyping() {
+      const typingDiv = document.getElementById('typing');
+      if (typingDiv) {
+        typingDiv.remove();
+      }
+    }
+
+    async function sendMessage() {
+      const message = userInput.value.trim();
+      if (!message) {
+        return;
+      }
+
+      addMessage(message, 'user');
+      userInput.value = '';
+      showTyping();
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+        removeTyping();
+        addMessage(data.reply, 'bot');
+      } catch (error) {
+        removeTyping();
+        addMessage("⚠️ Sorry, I couldn't connect to the server. Please check your internet.", 'bot');
+      }
+    }
+
+    userInput.addEventListener('keyup', function (event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    });
   </script>
   
   <script src="theme.js"></script>
