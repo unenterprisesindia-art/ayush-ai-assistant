@@ -974,6 +974,13 @@
     const messagesDiv = document.getElementById('chat-messages');
     const userInput = document.getElementById('user-input');
 
+    const GREETINGS = new Set(['hi', 'hello', 'hey', 'namaste', 'good morning', 'good afternoon', 'good evening']);
+    const GOODBYES = new Set(['bye', 'goodbye', 'see you', 'take care', 'see you later']);
+
+    function asArray(value) {
+      return Array.isArray(value) ? value : [];
+    }
+
     function escapeHtml(value) {
       return String(value ?? '')
         .replaceAll('&', '&amp;')
@@ -983,8 +990,30 @@
         .replaceAll("'", '&#39;');
     }
 
-    function asArray(value) {
-      return Array.isArray(value) ? value : [];
+    function normalizeText(text) {
+      return String(text ?? '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function tokenize(text) {
+      return normalizeText(text).split(' ').filter(Boolean);
+    }
+
+    function isPhraseMatch(message, phraseSet) {
+      const normalized = normalizeText(message);
+      if (!normalized) {
+        return false;
+      }
+
+      for (const phrase of phraseSet) {
+        if (normalized === phrase || normalized.includes(` ${phrase} `) || normalized.startsWith(`${phrase} `) || normalized.endsWith(` ${phrase}`)) {
+          return true;
+        }
+      }
+      return false;
     }
 
     function toggleChat() {
@@ -1000,7 +1029,7 @@
         const formatted = String(text)
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\n/g, '<br>')
-          .replace(/(Name|Category|Benefits|Used for|Dosage|Precautions):/g, '<strong>$1:</strong>');
+          .replace(/(Name|Category|Benefits|Used for|Dosage|Precautions|Relevance):/g, '<strong>$1:</strong>');
         msgDiv.innerHTML = formatted;
       } else {
         msgDiv.textContent = text;
@@ -1026,46 +1055,95 @@
       }
     }
 
-    async function searchHerbs(queryText) {
-      const queryWords = queryText
-        .toLowerCase()
-        .split(/\s+/)
-        .map((word) => word.trim())
-        .filter(Boolean);
+    function buildSearchText(herb) {
+      return normalizeText([
+        herb.name,
+        ...asArray(herb.benefits),
+        ...asArray(herb.used_for)
+      ].filter(Boolean).join(' '));
+    }
 
-      const snapshot = await getDocs(collection(db, 'herbs'));
-      const matches = [];
+    function calculateRelevance(herb, queryTokens) {
+      const benefitsText = normalizeText(asArray(herb.benefits).join(' '));
+      const usedForText = normalizeText(asArray(herb.used_for).join(' '));
+      const nameText = normalizeText(herb.name);
 
-      snapshot.forEach((item) => {
-        const herb = item.data();
-        const searchable = [
-          herb.name,
-          herb.category,
-          ...asArray(herb.used_for),
-          ...asArray(herb.benefits),
-          ...asArray(herb.precautions),
-          herb.dosage
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase();
-
-        if (queryWords.some((word) => searchable.includes(word))) {
-          matches.push(herb);
+      let score = 0;
+      queryTokens.forEach((token) => {
+        if (benefitsText.includes(token)) {
+          score += 3;
+        }
+        if (usedForText.includes(token)) {
+          score += 2;
+        }
+        if (nameText.includes(token)) {
+          score += 1;
         }
       });
 
-      return matches;
+      if (queryTokens.length > 1) {
+        const phrase = queryTokens.join(' ');
+        if (benefitsText.includes(phrase) || usedForText.includes(phrase)) {
+          score += 2;
+        }
+      }
+
+      return score;
     }
 
-    function formatHerbReply(herb) {
+    async function searchHerbsBySymptoms(userMessage) {
+      const queryTokens = tokenize(userMessage);
+      if (queryTokens.length === 0) {
+        return [];
+      }
+
+      const snapshot = await getDocs(collection(db, 'herbs'));
+      const scored = [];
+
+      snapshot.forEach((item) => {
+        const herb = item.data();
+        const combinedText = buildSearchText(herb);
+
+        const hasAnyToken = queryTokens.some((token) => combinedText.includes(token));
+        if (!hasAnyToken) {
+          return;
+        }
+
+        const relevance = calculateRelevance(herb, queryTokens);
+        if (relevance > 0) {
+          scored.push({
+            id: item.id,
+            herb,
+            relevance
+          });
+        }
+      });
+
+      const uniqueByName = new Map();
+      scored
+        .sort((a, b) => b.relevance - a.relevance)
+        .forEach((entry) => {
+          const key = normalizeText(entry.herb.name || entry.id);
+          if (!uniqueByName.has(key)) {
+            uniqueByName.set(key, entry);
+          }
+        });
+
+      return Array.from(uniqueByName.values())
+        .sort((a, b) => b.relevance - a.relevance)
+        .slice(0, 3);
+    }
+
+    function formatHerbReply(entry) {
+      const { herb, relevance } = entry;
       return [
         `**🌿 ${escapeHtml(herb.name || 'Unknown Herb')}**`,
         `Category: ${escapeHtml(herb.category || 'N/A')}`,
         `Benefits: ${escapeHtml(asArray(herb.benefits).join(', ') || 'N/A')}`,
         `Used for: ${escapeHtml(asArray(herb.used_for).join(', ') || 'N/A')}`,
         `Dosage: ${escapeHtml(herb.dosage || 'N/A')}`,
-        `Precautions: ${escapeHtml(asArray(herb.precautions).join(', ') || 'N/A')}`
+        `Precautions: ${escapeHtml(asArray(herb.precautions).join(', ') || 'N/A')}`,
+        `Relevance: ${relevance}`
       ].join('\n');
     }
 
@@ -1077,19 +1155,30 @@
 
       addMessage(message, 'user');
       userInput.value = '';
+
+      if (isPhraseMatch(message, GREETINGS)) {
+        addMessage('Hello! 👋 I can help with herbal suggestions. Tell me your symptoms, like stress, cold, digestion, or low immunity.', 'bot');
+        return;
+      }
+
+      if (isPhraseMatch(message, GOODBYES)) {
+        addMessage('Goodbye! 🌿 Take care and stay healthy. Come back anytime for herbal guidance.', 'bot');
+        return;
+      }
+
       showTyping();
 
       try {
-        const results = await searchHerbs(message);
+        const results = await searchHerbsBySymptoms(message);
         removeTyping();
 
         if (results.length === 0) {
-          addMessage('Sorry, no herb found for your query. Try keywords like immunity, stress, digestion, or turmeric.', 'bot');
+          addMessage('Sorry, I could not find a matching herb. Try symptom keywords like cough, anxiety, sleep, digestion, or immunity.', 'bot');
           return;
         }
 
-        results.slice(0, 3).forEach((herb) => {
-          addMessage(formatHerbReply(herb), 'bot');
+        results.forEach((entry) => {
+          addMessage(formatHerbReply(entry), 'bot');
         });
       } catch (error) {
         removeTyping();
@@ -1101,7 +1190,7 @@
     }
 
     chatBtn.onclick = toggleChat;
-    userInput.addEventListener('keyup', function (event) {
+    userInput.addEventListener('keyup', (event) => {
       if (event.key === 'Enter') {
         sendMessage();
       }
