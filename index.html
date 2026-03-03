@@ -971,7 +971,7 @@
     const chatWindow = document.getElementById('chat-window');
     const messagesDiv = document.getElementById('chat-messages');
     const userInput = document.getElementById('user-input');
-    const API_URL = 'https://herbal-backend-ylb7.onrender.com/chat';
+    const API_URL = 'https://herbal-backend.vercel.app/chat';
 
     function toggleChat() {
       const isHidden = chatWindow.style.display === 'none' || chatWindow.style.display === '';
@@ -1027,12 +1027,24 @@
           body: JSON.stringify({ message })
         });
 
+        if (!response.ok) {
+          throw new Error(`Server error (${response.status})`);
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          throw new Error('Invalid server response format');
+        }
+
         const data = await response.json();
         removeTyping();
-        addMessage(data.reply, 'bot');
+        addMessage(data.reply || '⚠️ I received an empty reply. Please try again.', 'bot');
       } catch (error) {
         removeTyping();
-        addMessage("⚠️ Sorry, I couldn't connect to the server. Please check your internet.", 'bot');
+        const messageText = error && error.message
+          ? error.message
+          : 'Unable to reach the server';
+        addMessage(`⚠️ ${messageText}. Please try again.`, 'bot');
       }
     }
 
