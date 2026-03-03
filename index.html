@@ -966,30 +966,46 @@
   </script>
 
   <!-- AYUSH Chat Integration -->
-  <script>
+  <script type="module">
+    import { db, collection, getDocs } from './firebase-init.js';
+
     const chatBtn = document.getElementById('chat-btn');
     const chatWindow = document.getElementById('chat-window');
     const messagesDiv = document.getElementById('chat-messages');
     const userInput = document.getElementById('user-input');
-    const API_URL = 'https://herbal-backend.vercel.app/chat';
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function asArray(value) {
+      return Array.isArray(value) ? value : [];
+    }
 
     function toggleChat() {
       const isHidden = chatWindow.style.display === 'none' || chatWindow.style.display === '';
       chatWindow.style.display = isHidden ? 'flex' : 'none';
     }
-    chatBtn.onclick = toggleChat;
 
     function addMessage(text, sender) {
       const msgDiv = document.createElement('div');
       msgDiv.className = sender === 'user' ? 'msg-user' : 'msg-bot';
 
       if (sender === 'bot') {
-        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        text = text.replace(/\n/g, '<br>');
-        text = text.replace(/(Name|Category|Benefits|Dosage|Precautions):/g, '<strong>$1:</strong>');
+        const formatted = String(text)
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n/g, '<br>')
+          .replace(/(Name|Category|Benefits|Used for|Dosage|Precautions):/g, '<strong>$1:</strong>');
+        msgDiv.innerHTML = formatted;
+      } else {
+        msgDiv.textContent = text;
       }
 
-      msgDiv.innerHTML = text;
       messagesDiv.appendChild(msgDiv);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
@@ -998,7 +1014,7 @@
       const typingDiv = document.createElement('div');
       typingDiv.className = 'typing-indicator';
       typingDiv.id = 'typing';
-      typingDiv.innerText = 'Bot is typing...';
+      typingDiv.innerText = 'Bot is searching herbs...';
       messagesDiv.appendChild(typingDiv);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
@@ -1008,6 +1024,49 @@
       if (typingDiv) {
         typingDiv.remove();
       }
+    }
+
+    async function searchHerbs(queryText) {
+      const queryWords = queryText
+        .toLowerCase()
+        .split(/\s+/)
+        .map((word) => word.trim())
+        .filter(Boolean);
+
+      const snapshot = await getDocs(collection(db, 'herbs'));
+      const matches = [];
+
+      snapshot.forEach((item) => {
+        const herb = item.data();
+        const searchable = [
+          herb.name,
+          herb.category,
+          ...asArray(herb.used_for),
+          ...asArray(herb.benefits),
+          ...asArray(herb.precautions),
+          herb.dosage
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        if (queryWords.some((word) => searchable.includes(word))) {
+          matches.push(herb);
+        }
+      });
+
+      return matches;
+    }
+
+    function formatHerbReply(herb) {
+      return [
+        `**🌿 ${escapeHtml(herb.name || 'Unknown Herb')}**`,
+        `Category: ${escapeHtml(herb.category || 'N/A')}`,
+        `Benefits: ${escapeHtml(asArray(herb.benefits).join(', ') || 'N/A')}`,
+        `Used for: ${escapeHtml(asArray(herb.used_for).join(', ') || 'N/A')}`,
+        `Dosage: ${escapeHtml(herb.dosage || 'N/A')}`,
+        `Precautions: ${escapeHtml(asArray(herb.precautions).join(', ') || 'N/A')}`
+      ].join('\n');
     }
 
     async function sendMessage() {
@@ -1021,40 +1080,37 @@
       showTyping();
 
       try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message })
-        });
-
-        if (!response.ok) {
-          throw new Error(`Server error (${response.status})`);
-        }
-
-        const contentType = response.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-          throw new Error('Invalid server response format');
-        }
-
-        const data = await response.json();
+        const results = await searchHerbs(message);
         removeTyping();
-        addMessage(data.reply || '⚠️ I received an empty reply. Please try again.', 'bot');
+
+        if (results.length === 0) {
+          addMessage('Sorry, no herb found for your query. Try keywords like immunity, stress, digestion, or turmeric.', 'bot');
+          return;
+        }
+
+        results.slice(0, 3).forEach((herb) => {
+          addMessage(formatHerbReply(herb), 'bot');
+        });
       } catch (error) {
         removeTyping();
         const messageText = error && error.message
           ? error.message
-          : 'Unable to reach the server';
+          : 'Unable to read herbs from Firestore';
         addMessage(`⚠️ ${messageText}. Please try again.`, 'bot');
       }
     }
 
+    chatBtn.onclick = toggleChat;
     userInput.addEventListener('keyup', function (event) {
       if (event.key === 'Enter') {
         sendMessage();
       }
     });
+
+    window.toggleChat = toggleChat;
+    window.sendMessage = sendMessage;
   </script>
-  
+
   <script src="theme.js"></script>
 </body>
 </html>
