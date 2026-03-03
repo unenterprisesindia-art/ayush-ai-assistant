@@ -12,6 +12,7 @@ import {
   deleteDoc,
   doc,
   getFirestore,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -58,6 +59,7 @@ export {
   onSnapshot,
   orderBy,
   query,
+  getDocs,
   serverTimestamp,
   updateDoc,
   writeBatch
